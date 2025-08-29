@@ -2,7 +2,7 @@ services:
   # Backend API Service
   - type: web
     name: spotify-ai-backend
-    env: python
+    runtime: python
     buildCommand: cd backend && pip install -r requirements.txt
     startCommand: cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
@@ -29,11 +29,8 @@ services:
         value: https://your-backend-name.onrender.com
 
   # Frontend Static Site
-  - type: static
+  - type: web
     name: spotify-ai-frontend
+    runtime: static
     buildCommand: cd frontend && npm ci && VITE_API_URL=https://your-backend-name.onrender.com npm run build
     staticPublishPath: ./frontend/dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
