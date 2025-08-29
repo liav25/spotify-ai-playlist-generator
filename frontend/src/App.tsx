@@ -6,6 +6,18 @@ import { ThemeProvider } from './ThemeContext'
 import { PlaylistProvider, usePlaylist } from './PlaylistContext'
 import { chatApi } from './chatApi'
 
+// Get API base URL for auth endpoints
+const getApiBaseUrl = (): string => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  const isProd = import.meta.env.PROD;
+  
+  if (apiUrl && isProd) {
+    return apiUrl;
+  }
+  // In development, use relative URLs with proxy
+  return '';
+};
+
 interface User {
   id: string
   display_name: string
@@ -77,7 +89,8 @@ function App() {
     setError(null)
     
     // Redirect to backend OAuth endpoint
-    window.location.href = '/auth/login'
+    const apiBaseUrl = getApiBaseUrl()
+    window.location.href = `${apiBaseUrl}/auth/login`
   }
 
   const handleLogout = () => {
