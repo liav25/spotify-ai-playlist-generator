@@ -62,7 +62,8 @@ function App() {
     setError(null)
     
     try {
-      const response = await fetch('/api/user', {
+      const apiBaseUrl = getApiBaseUrl()
+      const response = await fetch(`${apiBaseUrl}/api/user`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
