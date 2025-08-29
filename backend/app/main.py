@@ -4,7 +4,6 @@ Spotify AI Playlist Generator - FastAPI Backend
 Handles Spotify OAuth authentication and LangGraph agent integration
 """
 
-import os
 import secrets
 import base64
 import uuid
@@ -15,7 +14,7 @@ from typing import Optional
 
 import httpx
 import spotipy
-from fastapi import FastAPI, HTTPException, Depends, status, Request
+from fastapi import FastAPI, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from langchain_core.messages import HumanMessage
@@ -100,7 +99,7 @@ async def get_current_user_from_header(request: Request) -> Optional[User]:
     token = authorization.replace("Bearer ", "")
     
     # Find user session by looking for matching token
-    for user_id, session_data in user_sessions.items():
+    for session_data in user_sessions.values():
         if session_data.get("frontend_token") == token:
             return session_data["user"]
     
