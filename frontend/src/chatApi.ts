@@ -21,8 +21,11 @@ export interface ChatResponse {
 // Get API base URL - use environment variable in production, fallback to relative URLs
 const getApiBaseUrl = (): string => {
   // In production, VITE_API_URL will be set by Render
-  if (import.meta.env.VITE_API_URL && import.meta.env.PROD) {
-    return import.meta.env.VITE_API_URL;
+  const apiUrl = import.meta.env.VITE_API_URL;
+  const isProd = import.meta.env.PROD;
+  
+  if (apiUrl && isProd) {
+    return apiUrl;
   }
   // In development, use relative URLs with proxy
   return '';
