@@ -66,6 +66,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
       // Update playlist if provided
       if (response.playlistData) {
         setCurrentPlaylist(response.playlistData);
+        
+        // If this is a newly created playlist with no tracks, 
+        // fetch the updated playlist data after a short delay to get any tracks that were added
+        if (response.playlistData.tracks.length === 0) {
+          setTimeout(async () => {
+            try {
+              const updatedPlaylist = await chatApi.fetchPlaylist(response.playlistData.id);
+              if (updatedPlaylist && updatedPlaylist.tracks.length > 0) {
+                setCurrentPlaylist(updatedPlaylist);
+              }
+            } catch (error) {
+              console.warn('Failed to fetch updated playlist:', error);
+            }
+          }, 2000); // Wait 2 seconds for tracks to be added
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error);

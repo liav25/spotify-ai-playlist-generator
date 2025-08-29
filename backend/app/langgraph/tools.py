@@ -501,12 +501,13 @@ def create_playlist(
         playlist_data = {
             "id": playlist["id"],
             "name": playlist["name"],
-            "url": playlist["external_urls"]["spotify"],
+            "description": playlist.get("description", ""),
             "public": playlist["public"],
             "collaborative": playlist["collaborative"],
-            "description": playlist.get("description", ""),
-            "owner": playlist["owner"]["display_name"],
-            "tracks": 0  # New playlist starts with 0 tracks
+            "total_tracks": 0,
+            "owner": playlist.get("owner", {}).get("display_name") or "Unknown",
+            "tracks": [],  # New playlist starts with empty tracks array
+            "images": playlist.get("images", []),
         }
         
         logger.info(f"Successfully created playlist '{name}' with ID: {playlist['id']}")
@@ -629,7 +630,7 @@ def get_playlist_tracks(
             "public": playlist["public"],
             "collaborative": playlist["collaborative"],
             "total_tracks": playlist["tracks"]["total"],
-            "owner": playlist["owner"]["display_name"],
+            "owner": playlist.get("owner", {}).get("display_name") or "Unknown",
             "tracks": tracks,
             "images": playlist.get("images", []),
         }

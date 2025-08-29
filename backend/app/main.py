@@ -416,27 +416,22 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
 
         # Extract playlist data if available
         playlist_data = result.get("playlist_data") if result else None
-        processed_playlist_data = None
-        
         if playlist_data:
+            # Ensure data consistency before creating PlaylistData model
             tracks = playlist_data.get('tracks', [])
-            track_count = len(tracks) if isinstance(tracks, list) else tracks if isinstance(tracks, int) else 0
+            if not isinstance(tracks, list):
+                tracks = []
+                playlist_data['tracks'] = tracks
+            
+            # Ensure all required fields are present with proper types
+            playlist_data.setdefault('total_tracks', len(tracks))
+            playlist_data['owner'] = playlist_data.get('owner') or 'Unknown'
+            playlist_data.setdefault('images', [])
+            
+            track_count = len(tracks)
             logger.debug(
                 f"🎵 Playlist data found in result: {playlist_data.get('name', 'Unknown')} with {track_count} tracks"
             )
-            
-            # Transform playlist data to match PlaylistData model
-            processed_playlist_data = {
-                "id": playlist_data.get("id", ""),
-                "name": playlist_data.get("name", ""),
-                "description": playlist_data.get("description", ""),
-                "public": playlist_data.get("public", True),
-                "collaborative": playlist_data.get("collaborative", False),
-                "total_tracks": track_count,
-                "owner": playlist_data.get("owner") or "Unknown",
-                "tracks": tracks if isinstance(tracks, list) else [],
-                "images": playlist_data.get("images", []),
-            }
 
         # Log final state for debugging
         logger.debug(f"📊 Final agent state: user_intent='{result.get('user_intent')}', playlist_id={result.get('playlist_id')}, playlist_name='{result.get('playlist_name')}'")
@@ -446,7 +441,7 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
         return ChatResponse(
             message=response_content,
             thread_id=thread_id,
-            playlist_data=PlaylistData(**processed_playlist_data) if processed_playlist_data else None,
+            playlist_data=PlaylistData(**playlist_data) if playlist_data else None,
         )
 
     except HTTPException as http_error:

@@ -186,7 +186,10 @@ Use the Reason-Act-Observe pattern:
 4. **Curate**: Select the best tracks, ensuring good flow and variety
 5. **Create**: Make the playlist with a creative, descriptive name
 6. **Populate**: Add tracks to the playlist
-7. **Summarize**: Explain your choices and playlist characteristics
+7. **Retrieve**: Use get_playlist_tracks to fetch the final playlist with all tracks and metadata
+8. **Summarize**: Explain your choices and playlist characteristics
+
+**IMPORTANT**: After adding tracks to a playlist, ALWAYS use `get_playlist_tracks` to fetch the complete playlist data with tracks, album covers, and metadata before finishing.
 
 # AUDIO FEATURES EXPERTISE:
 Use these strategically in recommendations:
