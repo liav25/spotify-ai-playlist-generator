@@ -448,10 +448,15 @@ async def chat_endpoint(
         # Extract playlist data if available
         playlist_data = result.get("playlist_data") if result else None
         if playlist_data:
+            tracks = playlist_data.get('tracks', [])
+            track_count = len(tracks) if isinstance(tracks, list) else tracks if isinstance(tracks, int) else 0
             logger.debug(
-                f"🎵 Playlist data found in result: {playlist_data.get('name', 'Unknown')} with {len(playlist_data.get('tracks', []))} tracks"
+                f"🎵 Playlist data found in result: {playlist_data.get('name', 'Unknown')} with {track_count} tracks"
             )
 
+        # Log final state for debugging
+        logger.debug(f"📊 Final agent state: user_intent='{result.get('user_intent')}', playlist_id={result.get('playlist_id')}, playlist_name='{result.get('playlist_name')}'")
+        
         logger.info(f"✅ Chat processing completed successfully for thread {thread_id}")
 
         return ChatResponse(

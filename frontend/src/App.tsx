@@ -3,7 +3,8 @@ import './App.css'
 import ChatInterface from './ChatInterface'
 import Sidebar from './Sidebar'
 import { ThemeProvider } from './ThemeContext'
-import { PlaylistProvider } from './PlaylistContext'
+import { PlaylistProvider, usePlaylist } from './PlaylistContext'
+import { chatApi } from './chatApi'
 
 interface User {
   id: string
@@ -85,11 +86,6 @@ function App() {
     setError(null)
   }
 
-  const handleNewConversation = () => {
-    // In a real app, this would create a new conversation
-    console.log('Starting new conversation...')
-  }
-
   if (loading) {
     return (
       <ThemeProvider>
@@ -157,19 +153,33 @@ function App() {
   return (
     <ThemeProvider>
       <PlaylistProvider>
-        <div className="app">
-          <Sidebar 
-            user={user}
-            onNewConversation={handleNewConversation}
-            onLogout={handleLogout}
-          />
-          
-          <div className="main-content">
-            <ChatInterface username={user.display_name} />
-          </div>
-        </div>
+        <AppContent user={user} onLogout={handleLogout} />
       </PlaylistProvider>
     </ThemeProvider>
+  )
+}
+
+function AppContent({ user, onLogout }: { user: User; onLogout: () => void }) {
+  const { setCurrentPlaylist } = usePlaylist()
+  
+  const handleNewConversation = () => {
+    // Reset the conversation thread and clear the current playlist
+    chatApi.resetThread()
+    setCurrentPlaylist(null)
+  }
+
+  return (
+    <div className="app">
+      <Sidebar 
+        user={user}
+        onNewConversation={handleNewConversation}
+        onLogout={onLogout}
+      />
+      
+      <div className="main-content">
+        <ChatInterface username={user.display_name} />
+      </div>
+    </div>
   )
 }
 
