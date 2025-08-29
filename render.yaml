@@ -1,0 +1,55 @@
+services:
+  # Backend API Service
+  - type: web
+    name: spotify-ai-backend
+    env: python
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.1
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: spotify-ai-frontend
+          property: url
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: spotify-ai-backend
+          property: url
+      # These need to be set manually in Render dashboard:
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: LANGSMITH_API_KEY
+        sync: false
+      - key: LANGSMITH_PROJECT
+        value: spotify-ai-playlist-generator
+      - key: LANGSMITH_TRACING_ENABLED
+        value: true
+
+  # Frontend Service
+  - type: web
+    name: spotify-ai-frontend
+    env: node
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist
+    routes:
+      - type: redirect
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: spotify-ai-backend
+          property: url
