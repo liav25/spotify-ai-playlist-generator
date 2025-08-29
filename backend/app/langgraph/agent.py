@@ -56,17 +56,26 @@ def _maybe_playlist_id(msg: ToolMessage) -> Optional[str]:
     import logging
 
     logger = logging.getLogger(__name__)
+    
+    logger.debug(f"🔍 Attempting to extract playlist ID from tool message")
+    logger.debug(f"🔍 Tool name: {getattr(msg, 'name', 'unknown')}")
+    logger.debug(f"🔍 Message content type: {type(msg.content)}")
+    logger.debug(f"🔍 Message content preview: {str(msg.content)[:200]}...")
 
     try:
         # First try to parse as JSON (for get_playlist_tracks and other tools)
         data = json.loads(msg.content)
+        logger.debug(f"🔍 Parsed as JSON: {data}")
         playlist_id = data.get("id") or data.get("playlist_id")
         if playlist_id:
             logger.debug(f"🔍 Found playlist ID in JSON: {playlist_id}")
-        return playlist_id
+            return playlist_id
+        else:
+            logger.debug(f"🔍 No 'id' or 'playlist_id' key found in JSON data")
     except (json.JSONDecodeError, TypeError):
         # If not JSON, check if it's a plain string playlist ID (from create_playlist)
         content = str(msg.content).strip()
+        logger.debug(f"🔍 Not JSON, checking as plain string: {content}")
         # Spotify playlist IDs are typically 22 characters long, alphanumeric
         if (
             content
@@ -80,6 +89,8 @@ def _maybe_playlist_id(msg: ToolMessage) -> Optional[str]:
     except Exception as e:
         logger.warning(f"⚠️ Error extracting playlist ID: {e}")
         return None
+    
+    return None
 
 
 def _maybe_playlist_data(msg: ToolMessage) -> Optional[dict]:
@@ -209,6 +220,42 @@ async def run_tools(input, config, **kwargs):
     logger.debug(f"🔧 Created ToolNode, executing tools")
     result = await tool_node.ainvoke(input, config, **kwargs)
     logger.debug(f"🔧 Tools execution completed")
+    
+    # Extract playlist information from tool results
+    updates = {}
+    
+    # Check tool messages for playlist information
+    new_messages = result.get("messages", [])
+    logger.info(f"🔧 Processing {len(new_messages)} tool result messages")
+    
+    for i, msg in enumerate(new_messages):
+        logger.info(f"🔧 Message {i}: type={getattr(msg, 'type', 'unknown')}, name={getattr(msg, 'name', 'unknown')}")
+        
+        if hasattr(msg, 'type') and msg.type == 'tool':
+            # Try to extract playlist ID
+            playlist_id = _maybe_playlist_id(msg)
+            if playlist_id:
+                logger.info(f"🆔 Extracted playlist ID from tool result: {playlist_id}")
+                updates["playlist_id"] = playlist_id
+            else:
+                logger.info(f"🆔 No playlist ID found in tool message")
+            
+            # Try to extract playlist data
+            playlist_data = _maybe_playlist_data(msg)
+            if playlist_data:
+                logger.info(f"📊 Extracted playlist data from tool result: {playlist_data.get('name', 'Unknown')}")
+                updates["playlist_data"] = playlist_data
+                # Also extract playlist name if available
+                if playlist_data.get('name'):
+                    updates["playlist_name"] = playlist_data['name']
+            else:
+                logger.info(f"📊 No playlist data found in tool message")
+    
+    # Merge updates with the result
+    if updates:
+        logger.info(f"🔄 Updating state with: {list(updates.keys())}")
+        result.update(updates)
+    
     return result
 
 

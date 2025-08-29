@@ -448,9 +448,39 @@ async def chat_endpoint(
         # Extract playlist data if available
         playlist_data = result.get("playlist_data") if result else None
         if playlist_data:
+            tracks = playlist_data.get('tracks', [])
+            track_count = len(tracks) if isinstance(tracks, list) else tracks if isinstance(tracks, int) else 0
             logger.debug(
-                f"🎵 Playlist data found in result: {playlist_data.get('name', 'Unknown')} with {len(playlist_data.get('tracks', []))} tracks"
+                f"🎵 Playlist data found in result: {playlist_data.get('name', 'Unknown')} with {track_count} tracks"
             )
+            
+            # If we have a playlist ID but incomplete track data, fetch full playlist details
+            playlist_id = playlist_data.get('id')
+            if playlist_id and (not playlist_data.get('tracks') or isinstance(playlist_data.get('tracks'), int)):
+                logger.debug(f"🔄 Fetching full track data for playlist {playlist_id}")
+                try:
+                    from .langgraph.tools import get_playlist_tracks
+                    config = {"configurable": {"spotify_client": spotify_client}}
+                    full_playlist_data = get_playlist_tracks.invoke(
+                        {"playlist_id": playlist_id, "limit": 100}, config
+                    )
+                    if full_playlist_data:
+                        # Update with complete track data
+                        playlist_data.update(full_playlist_data)
+                        logger.debug(f"✅ Updated playlist with {len(full_playlist_data.get('tracks', []))} tracks")
+                    else:
+                        # Fallback: ensure we have proper structure for Pydantic
+                        playlist_data['total_tracks'] = playlist_data.get('tracks', 0) if isinstance(playlist_data.get('tracks'), int) else 0
+                        playlist_data['tracks'] = []
+                        if not playlist_data.get('owner'):
+                            playlist_data['owner'] = "Unknown"
+                except Exception as e:
+                    logger.error(f"❌ Error fetching full track data for playlist {playlist_id}: {e}")
+                    # Fallback: ensure we have proper structure for Pydantic
+                    playlist_data['total_tracks'] = playlist_data.get('tracks', 0) if isinstance(playlist_data.get('tracks'), int) else 0
+                    playlist_data['tracks'] = []
+                    if not playlist_data.get('owner'):
+                        playlist_data['owner'] = "Unknown"
 
         logger.info(f"✅ Chat processing completed successfully for thread {thread_id}")
 

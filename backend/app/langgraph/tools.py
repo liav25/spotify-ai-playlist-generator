@@ -517,7 +517,7 @@ def add_tracks_to_playlist(
         track_uris: List of track URIs to add to the playlist.
 
     Returns:
-        True if tracks were added successfully, False otherwise.
+        Dictionary containing updated playlist info with tracks, or None if failed.
     """
     logger.info(f"Adding {len(track_uris)} tracks to playlist {playlist_id}")
     try:
@@ -526,7 +526,7 @@ def add_tracks_to_playlist(
         )
         if not spotify_client:
             logger.error("Spotify client not found in config")
-            return False
+            return None
             
         chunk_size = 100
         chunks_processed = 0
@@ -540,10 +540,13 @@ def add_tracks_to_playlist(
         logger.info(
             f"Successfully added all {len(track_uris)} tracks to playlist {playlist_id}"
         )
-        return True
+        
+        # Now get the updated playlist data to return
+        return get_playlist_tracks(config, playlist_id, limit=100)
+        
     except Exception as e:
         logger.error(f"Error adding tracks to playlist {playlist_id}: {e}")
-        return False
+        return None
 
 
 @tool(
