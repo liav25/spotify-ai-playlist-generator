@@ -452,6 +452,9 @@ async def chat_endpoint(
                 f"🎵 Playlist data found in result: {playlist_data.get('name', 'Unknown')} with {len(playlist_data.get('tracks', []))} tracks"
             )
 
+        # Log final state for debugging
+        logger.debug(f"📊 Final agent state: user_intent='{result.get('user_intent')}', playlist_id={result.get('playlist_id')}, playlist_name='{result.get('playlist_name')}'")
+        
         logger.info(f"✅ Chat processing completed successfully for thread {thread_id}")
 
         return ChatResponse(

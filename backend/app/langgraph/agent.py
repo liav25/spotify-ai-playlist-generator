@@ -58,14 +58,14 @@ def _maybe_playlist_id(msg: ToolMessage) -> Optional[str]:
     logger = logging.getLogger(__name__)
 
     try:
-        # First try to parse as JSON (for get_playlist_tracks and other tools)
+        # First try to parse as JSON (for create_playlist, get_playlist_tracks and other tools)
         data = json.loads(msg.content)
         playlist_id = data.get("id") or data.get("playlist_id")
         if playlist_id:
             logger.debug(f"🔍 Found playlist ID in JSON: {playlist_id}")
-        return playlist_id
+            return playlist_id
     except (json.JSONDecodeError, TypeError):
-        # If not JSON, check if it's a plain string playlist ID (from create_playlist)
+        # If not JSON, check if it's a plain string playlist ID
         content = str(msg.content).strip()
         # Spotify playlist IDs are typically 22 characters long, alphanumeric
         if (
@@ -209,6 +209,35 @@ async def run_tools(input, config, **kwargs):
     logger.debug(f"🔧 Created ToolNode, executing tools")
     result = await tool_node.ainvoke(input, config, **kwargs)
     logger.debug(f"🔧 Tools execution completed")
+    
+    # Extract playlist information from tool results and update state
+    updates = {}
+    
+    # Check the last message for tool results
+    if result.get("messages") and len(result["messages"]) > 0:
+        last_message = result["messages"][-1]
+        if hasattr(last_message, 'content'):
+            # Check for playlist ID
+            playlist_id = _maybe_playlist_id(last_message)
+            if playlist_id:
+                logger.info(f"🎵 Extracted playlist_id from tool result: {playlist_id}")
+                updates["playlist_id"] = playlist_id
+            
+            # Check for playlist data
+            playlist_data = _maybe_playlist_data(last_message)
+            if playlist_data:
+                logger.info(f"🎵 Extracted playlist_data from tool result: {playlist_data.get('name', 'Unknown')}")
+                updates["playlist_data"] = playlist_data
+                # Also extract playlist name if not already set
+                if playlist_data.get("name") and not input.get("playlist_name"):
+                    updates["playlist_name"] = playlist_data["name"]
+                    logger.info(f"🎵 Extracted playlist_name: {playlist_data['name']}")
+    
+    # Merge updates with result
+    if updates:
+        result.update(updates)
+        logger.debug(f"🎵 Updated state with: {list(updates.keys())}")
+    
     return result
 
 
