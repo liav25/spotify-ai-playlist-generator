@@ -448,8 +448,10 @@ async def chat_endpoint(
         # Extract playlist data if available
         playlist_data = result.get("playlist_data") if result else None
         if playlist_data:
+            tracks = playlist_data.get('tracks', [])
+            track_count = len(tracks) if isinstance(tracks, list) else tracks if isinstance(tracks, int) else 0
             logger.debug(
-                f"🎵 Playlist data found in result: {playlist_data.get('name', 'Unknown')} with {len(playlist_data.get('tracks', []))} tracks"
+                f"🎵 Playlist data found in result: {playlist_data.get('name', 'Unknown')} with {track_count} tracks"
             )
 
         # Log final state for debugging
