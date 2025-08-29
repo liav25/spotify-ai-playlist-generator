@@ -1,0 +1,253 @@
+/* Theme-aware PlaylistAI Styles */
+
+/* Main App Container */
+.app {
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--color-text-primary);
+  display: flex;
+  position: relative;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  margin-left: 400px;
+  background: var(--color-bg-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease;
+}
+
+/* Loading State */
+.app.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--color-border-primary);
+  border-top: 3px solid var(--color-accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  transition: border-color 0.3s ease;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  animation: pulse 2s ease-in-out infinite;
+  transition: color 0.3s ease;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Login State */
+.app.login-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0;
+}
+
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.login-content {
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Error Styles */
+.error {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-accent-secondary);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  color: var(--color-accent-secondary);
+  text-align: center;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.error button {
+  background: var(--color-accent-secondary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 12px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.error button:hover {
+  filter: brightness(0.9);
+}
+
+/* Login Section */
+.login-section {
+  text-align: center;
+  padding: 48px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 12px;
+  animation: slideUp 0.6s ease-out;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.login-header .logo {
+  width: 48px;
+  height: 48px;
+  background: var(--color-accent-primary);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.login-header .spotify-logo {
+  width: 28px;
+  height: 28px;
+  color: white;
+}
+
+.login-section h1 {
+  color: var(--color-text-primary);
+  margin: 0;
+  font-size: 32px;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.login-section p {
+  color: var(--color-text-secondary);
+  margin-bottom: 32px;
+  font-size: 16px;
+  line-height: 1.5;
+  transition: color 0.3s ease;
+}
+
+/* Spotify Login Button */
+.spotify-login-btn {
+  background: var(--color-accent-primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  min-width: 200px;
+  justify-content: center;
+}
+
+.spotify-login-btn:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.spotify-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .login-section {
+    padding: 32px 24px;
+  }
+  
+  .login-section h1 {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 16px;
+  }
+  
+  .login-section {
+    padding: 24px 20px;
+  }
+  
+  .login-section h1 {
+    font-size: 24px;
+  }
+  
+  .login-section p {
+    font-size: 14px;
+  }
+  
+  .spotify-login-btn {
+    font-size: 14px;
+    padding: 10px 20px;
+    min-width: 180px;
+  }
+}
+

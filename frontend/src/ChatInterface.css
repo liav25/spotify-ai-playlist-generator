@@ -1,0 +1,443 @@
+/* Theme-aware Chat Interface */
+
+.chat-interface {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-primary);
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+/* Welcome Container */
+.welcome-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 48px;
+}
+
+.welcome-header {
+  text-align: center;
+  max-width: 600px;
+}
+
+.welcome-icon {
+  width: 80px;
+  height: 80px;
+  background: var(--color-accent-primary);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  transition: background-color 0.3s ease;
+}
+
+.welcome-icon .spotify-logo {
+  width: 48px;
+  height: 48px;
+  color: white;
+}
+
+.welcome-header h1 {
+  color: var(--color-text-primary);
+  font-size: 48px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  line-height: 1.2;
+  transition: color 0.3s ease;
+}
+
+.welcome-header p {
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  line-height: 1.6;
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+/* Preset Cards */
+.preset-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.preset-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.preset-card:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-accent-primary);
+  transform: translateY(-2px);
+}
+
+.preset-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--color-border-primary);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+  transition: background-color 0.3s ease;
+}
+
+.preset-content h3 {
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  transition: color 0.3s ease;
+}
+
+.preset-content p {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.4;
+  transition: color 0.3s ease;
+}
+
+/* Messages Container */
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: var(--color-border-primary);
+  border-radius: 3px;
+  transition: background-color 0.3s ease;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-secondary);
+}
+
+/* Message Bubbles */
+.message {
+  display: flex;
+  margin-bottom: 12px;
+  animation: slideUp 0.3s ease-out;
+}
+
+.message.user-message {
+  justify-content: flex-end;
+}
+
+.message.assistant-message {
+  justify-content: flex-start;
+}
+
+.message-bubble {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 15px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  position: relative;
+}
+
+.user-message .message-bubble {
+  background: var(--color-accent-primary);
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.assistant-message .message-bubble {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-primary);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Message Content */
+.message-content {
+  margin: 0;
+}
+
+/* Preserve line breaks in messages */
+.message-line {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+  justify-content: flex-start;
+  opacity: 0.8;
+}
+
+.typing-indicator .message-bubble {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  color: var(--color-text-secondary);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  background: var(--color-accent-primary);
+  border-radius: 50%;
+  animation: typingDot 1.4s infinite ease-in-out;
+  transition: background-color 0.3s ease;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingDot {
+  0%, 60%, 100% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Input Area */
+.input-area {
+  border-top: 1px solid var(--color-border-primary);
+  padding: 24px;
+  background: var(--color-bg-primary);
+  position: relative;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.input-container {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  max-width: 100%;
+}
+
+.input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.message-input {
+  width: 100%;
+  min-height: 52px;
+  max-height: 120px;
+  padding: 14px 50px 14px 16px;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 26px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  font-size: 15px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.message-input:focus {
+  border-color: var(--color-accent-primary);
+  box-shadow: 0 0 0 3px rgba(82, 200, 138, 0.1);
+}
+
+.message-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.message-input:disabled {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* Send Button */
+.send-button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 36px;
+  height: 36px;
+  background: var(--color-accent-primary);
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.send-button:not(:disabled) {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.send-button:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  transform: scale(1.05);
+}
+
+.send-button:disabled {
+  background: var(--color-border-primary);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.send-button svg {
+  width: 16px;
+  height: 16px;
+  fill: white;
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .messages-container {
+    padding: 1rem;
+  }
+  
+  .input-area {
+    padding: 1rem;
+  }
+  
+  .message-bubble {
+    max-width: 85%;
+    font-size: 0.9rem;
+  }
+  
+  .welcome-examples {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .example-prompt {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .message-bubble {
+    max-width: 90%;
+    padding: 0.875rem 1rem;
+  }
+  
+  .input-container {
+    gap: 0.5rem;
+  }
+}
+
+/* Additional animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gradientX {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Colorful border cycling for assistant messages */
+.assistant-message:nth-child(4n+1) .message-bubble {
+  border-image: linear-gradient(135deg, #FF6B35, #FF8C69) 1;
+}
+
+.assistant-message:nth-child(4n+2) .message-bubble {
+  border-image: linear-gradient(135deg, #74B9FF, #A29BFE) 1;
+}
+
+.assistant-message:nth-child(4n+3) .message-bubble {
+  border-image: linear-gradient(135deg, #1DB954, #00B894) 1;
+}
+
+.assistant-message:nth-child(4n+4) .message-bubble {
+  border-image: linear-gradient(135deg, #FD79A8, #FDCB6E) 1;
+}
