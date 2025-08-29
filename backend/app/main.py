@@ -9,7 +9,8 @@ import secrets
 import base64
 import uuid
 import logging
-from datetime import datetime, timedelta
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import httpx
@@ -17,15 +18,12 @@ import spotipy
 from fastapi import FastAPI, HTTPException, Depends, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
 from langchain_core.messages import HumanMessage
 
 from .core.config import settings
 from .api.models import (
     ChatRequest,
     ChatResponse,
-    Token,
     User,
     SpotifyTokenResponse,
     PlaylistData,
@@ -49,67 +47,64 @@ logging.getLogger("uvicorn.access").setLevel(logging.INFO)
 # In-memory storage for demo (use database in production)
 user_sessions = {}
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan handler"""
+    # Startup
+    try:
+        settings.validate_required_settings()
+        logger.info("Application started successfully")
+    except ValueError as e:
+        logger.error(f"Configuration error: {e}")
+        raise
+    yield
+    # Shutdown
+    logger.info("Application shutting down")
+
+
 app = FastAPI(
     title="Spotify AI Playlist Generator",
     description="FastAPI backend with LangGraph agent for Spotify playlist creation",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
-# CORS middleware
+# CORS middleware - Allow both development and production origins
+allowed_origins = [settings.frontend_url]
+
+# In production, you might want to allow multiple origins or use a pattern
+# For now, we'll be explicit about allowed origins
+if "localhost" not in settings.frontend_url:
+    # Production mode - add common development origins for testing
+    allowed_origins.extend([
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# OAuth2 scheme for token validation
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
-
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    """Create JWT access token"""
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(
-            minutes=settings.access_token_expire_minutes
-        )
-
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(
-        to_encode, settings.secret_key, algorithm=settings.algorithm
-    )
-    return encoded_jwt
-
-
-def verify_token(token: str) -> Optional[dict]:
-    """Verify JWT token and return payload"""
-    try:
-        payload = jwt.decode(
-            token, settings.secret_key, algorithms=[settings.algorithm]
-        )
-        return payload
-    except JWTError:
+async def get_current_user_from_header(request: Request) -> Optional[User]:
+    """Get current user from Authorization header"""
+    authorization = request.headers.get("Authorization")
+    if not authorization or not authorization.startswith("Bearer "):
         return None
-
-
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> Optional[User]:
-    """Get current user from token"""
-    if not token:
-        return None
-
-    payload = verify_token(token)
-    if not payload:
-        return None
-
-    user_id = payload.get("sub")
-    if not user_id or user_id not in user_sessions:
-        return None
-
-    return user_sessions[user_id]["user"]
+    
+    # Extract the token (this would be the Spotify access token from frontend)
+    token = authorization.replace("Bearer ", "")
+    
+    # Find user session by looking for matching token
+    for user_id, session_data in user_sessions.items():
+        if session_data.get("frontend_token") == token:
+            return session_data["user"]
+    
+    return None
 
 
 def generate_random_string(length: int = 32) -> str:
@@ -117,21 +112,23 @@ def generate_random_string(length: int = 32) -> str:
     return secrets.token_urlsafe(length)
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Validate configuration on startup"""
-    try:
-        settings.validate_required_settings()
-        logger.info("Application started successfully")
-    except ValueError as e:
-        logger.error(f"Configuration error: {e}")
-        raise
 
 
 @app.get("/")
 async def root():
     """Root endpoint"""
     return {"message": "Spotify AI Playlist Generator API is running"}
+
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring and load balancers"""
+    return {
+        "status": "healthy",
+        "service": "spotify-ai-playlist-generator",
+        "version": "1.0.0",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
 
 
 @app.get("/auth/login")
@@ -141,7 +138,7 @@ async def spotify_login():
     state = generate_random_string()
 
     # Store state for verification (in production, use Redis/database)
-    user_sessions[state] = {"state": state, "timestamp": datetime.utcnow()}
+    user_sessions[state] = {"state": state, "timestamp": datetime.now(timezone.utc)}
 
     # Build authorization URL
     auth_params = {
@@ -224,32 +221,31 @@ async def spotify_callback(code: str, state: str):
             images=user_data.get("images"),
         )
 
+        # Generate a simple session token
+        session_token = generate_random_string(32)
+        
         # Store user session with Spotify token
         user_sessions[user.id] = {
             "user": user,
             "spotify_token": token_response.access_token,
-            "token_expires_at": datetime.utcnow()
+            "frontend_token": session_token,
+            "token_expires_at": datetime.now(timezone.utc)
             + timedelta(seconds=token_response.expires_in),
         }
-
-        # Create JWT token
-        access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-        access_token = create_access_token(
-            data={"sub": user.id}, expires_delta=access_token_expires
-        )
 
         # Clean up state
         if state in user_sessions:
             del user_sessions[state]
 
-        # Redirect to frontend with token
-        redirect_url = f"{settings.frontend_url}?token={access_token}"
+        # Redirect to frontend with simple session token
+        redirect_url = f"{settings.frontend_url}?token={session_token}"
         return RedirectResponse(url=redirect_url)
 
 
 @app.get("/api/user", response_model=User)
-async def get_user(current_user: User = Depends(get_current_user)):
+async def get_user(request: Request):
     """Get current user information"""
+    current_user = await get_current_user_from_header(request)
     if not current_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
@@ -258,10 +254,9 @@ async def get_user(current_user: User = Depends(get_current_user)):
 
 
 @app.get("/api/playlist/{playlist_id}", response_model=PlaylistData)
-async def get_playlist(
-    playlist_id: str, current_user: User = Depends(get_current_user)
-):
+async def get_playlist(playlist_id: str, request: Request):
     """Get playlist information with tracks and album covers"""
+    current_user = await get_current_user_from_header(request)
     if not current_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
@@ -311,37 +306,12 @@ async def get_playlist(
         )
 
 
-@app.post("/token", response_model=Token)
-async def login_for_access_token(token: str):
-    """Validate token and return user info"""
-    payload = verify_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    user_id = payload.get("sub")
-    if not user_id or user_id not in user_sessions:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "expires_in": settings.access_token_expire_minutes * 60,
-    }
-
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat_endpoint(
-    chat_request: ChatRequest, current_user: User = Depends(get_current_user)
-):
+async def chat_endpoint(chat_request: ChatRequest, request: Request):
     """Chat endpoint that integrates with LangGraph agent"""
+    current_user = await get_current_user_from_header(request)
+    
     logger.info(
         f"🚀 Chat request received from user {current_user.id if current_user else 'None'}"
     )

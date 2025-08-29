@@ -1,10 +1,24 @@
 import logging
 import spotipy
+import os
 from typing import List, Dict, Any, Optional
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
 
 from .models import Track
+
+# Import LangSmith tracing if available
+try:
+    from langsmith import traceable
+    tracing_enabled = os.getenv("LANGSMITH_TRACING_ENABLED", "true").lower() == "true" and os.getenv("LANGSMITH_API_KEY")
+    if tracing_enabled:
+        print("✅ LangSmith tracing enabled for Spotify tools")
+    else:
+        print("ℹ️  LangSmith tracing disabled for Spotify tools")
+except ImportError:
+    print("⚠️  LangSmith not available for tools tracing")
+    traceable = lambda name: lambda func: func  # No-op decorator
+    tracing_enabled = False
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +47,7 @@ def _track_to_dict(track: Track) -> Dict[str, Any]:
     description="Find tracks on Spotify by searching for song names, artists, or keywords",
     parse_docstring=True,
 )
+@traceable(name="spotify_search_tracks")
 def search_tracks(
     query: str,
     config: RunnableConfig,
@@ -449,6 +464,7 @@ def get_user_info(config: RunnableConfig) -> Optional[Dict[str, Any]]:
     description="Create a new Spotify playlist using the spotipy client",
     parse_docstring=True,
 )
+@traceable(name="spotify_create_playlist")
 def create_playlist(
     config: RunnableConfig,
     name: str,
@@ -504,6 +520,7 @@ def create_playlist(
     description="Add tracks to an existing Spotify playlist using the spotipy client",
     parse_docstring=True,
 )
+@traceable(name="spotify_add_tracks_to_playlist")
 def add_tracks_to_playlist(
     config: RunnableConfig,
     playlist_id: str,

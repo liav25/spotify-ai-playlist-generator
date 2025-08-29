@@ -21,15 +21,14 @@ class Settings(BaseSettings):
     frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
     backend_url: str = os.getenv("BACKEND_URL", "http://localhost:8000")
 
-    # Security
-    secret_key: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-    algorithm: str = os.getenv("ALGORITHM", "HS256")
-    access_token_expire_minutes: int = int(
-        os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
-    )
 
     # AI Agent Configuration
     openai_api_key: Optional[str] = os.getenv("OPENAI_API_KEY")
+
+    # LangSmith tracing configuration
+    langsmith_api_key: Optional[str] = os.getenv("LANGSMITH_API_KEY")
+    langsmith_project: Optional[str] = os.getenv("LANGSMITH_PROJECT", "spotify-ai-playlist-generator")
+    langsmith_tracing_enabled: bool = os.getenv("LANGSMITH_TRACING_ENABLED", "true").lower() == "true"
 
     # Optional: Langfuse observability
     langfuse_public_key: Optional[str] = os.getenv("LANGFUSE_PUBLIC_KEY")

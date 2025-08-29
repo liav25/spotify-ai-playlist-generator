@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Optional, List, Literal
 import json
+import os
 
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import StateGraph, START, END
@@ -16,8 +17,31 @@ from .state import AgentState
 
 # Load environment variables
 from dotenv import load_dotenv
-
 load_dotenv("/Users/liavalter/Projects/test_spotify/backend/.env")
+
+# Import and configure LangSmith tracing
+try:
+    from langsmith import traceable
+    from langsmith import Client as LangSmithClient
+    
+    # Initialize LangSmith client if API key is available
+    langsmith_client = None
+    if os.getenv("LANGSMITH_API_KEY") and os.getenv("LANGSMITH_TRACING_ENABLED", "true").lower() == "true":
+        langsmith_client = LangSmithClient(
+            api_key=os.getenv("LANGSMITH_API_KEY"),
+            api_url=os.getenv("LANGSMITH_API_URL", "https://api.smith.langchain.com")
+        )
+        # Set environment variables for automatic tracing
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGSMITH_PROJECT", "spotify-ai-playlist-generator")
+        print("✅ LangSmith tracing initialized")
+    else:
+        print("ℹ️  LangSmith tracing disabled - no API key provided")
+        
+except ImportError:
+    print("⚠️  LangSmith not available - install langsmith package for tracing")
+    traceable = lambda func: func  # No-op decorator
+    langsmith_client = None
 
 
 class AnyArgsSchema(BaseModel):
@@ -94,11 +118,21 @@ def _maybe_playlist_data(msg: ToolMessage) -> Optional[dict]:
         return None
 
 
+@traceable(name="spotify_dj_agent_call_model")
 async def call_model(state, config):
     import logging
 
     logger = logging.getLogger(__name__)
     logger.debug(f"🤖 call_model started with state keys: {list(state.keys())}")
+    
+    # Add tracing metadata
+    if langsmith_client:
+        metadata = {
+            "user_intent": state.get("user_intent", ""),
+            "playlist_id": state.get("playlist_id"),
+            "message_count": len(state.get("messages", [])),
+            "has_spotify_client": bool(config.get("configurable", {}).get("spotify_client"))
+        }
 
     # Add system prompt if first turn or use provided system prompt
     if not any(isinstance(m, SystemMessage) for m in state["messages"]):
@@ -199,11 +233,25 @@ Remember: You're not just adding random tracks - you're a skilled curator crafti
     return updates
 
 
+@traceable(name="spotify_dj_agent_run_tools")
 async def run_tools(input, config, **kwargs):
     import logging
 
     logger = logging.getLogger(__name__)
     logger.debug(f"🔧 run_tools called with input keys: {list(input.keys())}")
+    
+    # Extract tool information for tracing
+    tool_calls = []
+    if input.get("messages") and len(input["messages"]) > 0:
+        last_message = input["messages"][-1]
+        if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+            tool_calls = [{"name": tool_call["name"], "args": tool_call.get("args", {})} for tool_call in last_message.tool_calls]
+    
+    if langsmith_client and tool_calls:
+        metadata = {
+            "tool_calls": tool_calls,
+            "tool_count": len(tool_calls)
+        }
 
     tool_node = ToolNode(get_tools(config))
     logger.debug(f"🔧 Created ToolNode, executing tools")

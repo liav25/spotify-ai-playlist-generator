@@ -18,10 +18,21 @@ export interface ChatResponse {
   playlist_data?: PlaylistData;
 }
 
+// Get API base URL - use environment variable in production, fallback to relative URLs
+const getApiBaseUrl = (): string => {
+  // In production, VITE_API_URL will be set by Render
+  if (import.meta.env.VITE_API_URL && import.meta.env.PROD) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // In development, use relative URLs with proxy
+  return '';
+};
+
 export class ChatApi {
   // @ts-ignore - username may be used in future implementations
   private _username: string | null = null;
   private threadId: string | null = null;
+  private apiBaseUrl: string = getApiBaseUrl();
 
   setUsername(username: string) {
     this._username = username;
@@ -43,7 +54,7 @@ export class ChatApi {
     };
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(`${this.apiBaseUrl}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +106,7 @@ export class ChatApi {
     }
 
     try {
-      const response = await fetch(`/api/playlist/${playlistId}`, {
+      const response = await fetch(`${this.apiBaseUrl}/api/playlist/${playlistId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
