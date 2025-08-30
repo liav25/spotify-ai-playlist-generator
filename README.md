@@ -1,12 +1,12 @@
-# Spotify OAuth Web App
+# Mr. DJ
 
-A simple web application that demonstrates Spotify OAuth authentication using React (Vite) frontend and FastAPI backend.
+An AI-powered Spotify playlist generator that uses OAuth authentication with React (Vite) frontend and FastAPI backend.
 
 ## Features
 
 - Spotify OAuth 2.0 Authorization Code Flow
 - User authentication with Spotify
-- Display user's name after successful login
+- Create personalized playlists using AI
 - Modern React frontend with Vite
 - FastAPI backend with proper OAuth handling
 
@@ -69,13 +69,14 @@ The frontend will run on `http://localhost:3000`
 1. Open `http://localhost:3000` in your browser
 2. Click "Login with Spotify"
 3. Authorize the application
-4. You'll see "Hello [Your Name]" after successful authentication
+4. You can start creating playlists with Mr. DJ after successful authentication
 
 ## API Endpoints
 
 - `GET /auth/login` - Initiates Spotify OAuth flow
 - `GET /auth/callback` - Handles OAuth callback
 - `GET /api/user` - Returns current user information
+- `POST /api/chat` - Chat with Mr. DJ to create playlists
 
 ## Technologies Used
 

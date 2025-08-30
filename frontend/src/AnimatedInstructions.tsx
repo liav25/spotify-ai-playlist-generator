@@ -69,9 +69,8 @@ const AnimatedInstructions: React.FC = () => {
       <div className="steps-container">
         <div
           key={steps[currentStep].id}
-          className={`step active ${isTransitioning ? 'transitioning' : 'visible'}`}
+          className={`step step-${currentStep + 1} active ${isTransitioning ? 'transitioning' : 'visible'}`}
         >
-          <div className="step-number">{steps[currentStep].id}</div>
           <div className="step-icon-container">
             {steps[currentStep].icon}
           </div>

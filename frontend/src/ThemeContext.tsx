@@ -45,37 +45,37 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     const root = document.documentElement;
     
     if (currentTheme === 'light') {
-      // Light theme - Spearmint dominant with light grey backgrounds
-      root.style.setProperty('--color-bg-primary', '#F5F5F5');    // Light grey background
-      root.style.setProperty('--color-bg-secondary', '#EAEAEA');  // Slightly darker grey for surfaces
-      root.style.setProperty('--color-bg-tertiary', '#FFFFFF');   // Pure white for cards/inputs
-      root.style.setProperty('--color-text-primary', '#1A1A1A');  // Near black text
-      root.style.setProperty('--color-text-secondary', '#4A4A4A'); // Dark grey secondary text
-      root.style.setProperty('--color-text-muted', '#757575');     // Medium grey muted text
-      root.style.setProperty('--color-accent-primary', '#52C88A'); // Spearmint primary
-      root.style.setProperty('--color-accent-hover', '#45B87A');   // Darker spearmint on hover
-      root.style.setProperty('--color-accent-secondary', '#E91E63'); // Fuchsia accent
-      root.style.setProperty('--color-accent-warning', '#FFC107');  // Citric warning
-      root.style.setProperty('--color-accent-info', '#1A237E');    // Navy info
-      root.style.setProperty('--color-border-primary', '#D1D1D1'); // Light borders
-      root.style.setProperty('--color-border-secondary', '#B8B8B8'); // Darker borders
-      root.style.setProperty('--color-shadow', 'rgba(0, 0, 0, 0.1)'); // Light shadows
+      // Light theme - Vibrant and professional with warm backgrounds
+      root.style.setProperty('--color-bg-primary', '#FEFEFE');     // Warm white background
+      root.style.setProperty('--color-bg-secondary', '#F8F9FA');   // Subtle warm surface
+      root.style.setProperty('--color-bg-tertiary', '#FFFFFF');    // Pure white for cards/inputs
+      root.style.setProperty('--color-text-primary', '#1A1A1A');   // Near black text
+      root.style.setProperty('--color-text-secondary', '#4A4A4A');  // Dark grey secondary text
+      root.style.setProperty('--color-text-muted', '#6B7280');     // Cool grey muted text
+      root.style.setProperty('--color-accent-primary', '#1DB954');  // Spotify Green
+      root.style.setProperty('--color-accent-hover', '#1ED760');    // Brighter green on hover
+      root.style.setProperty('--color-accent-secondary', '#E91E63'); // Vibrant Pink
+      root.style.setProperty('--color-accent-warning', '#FFB02E');  // Warm Orange
+      root.style.setProperty('--color-accent-info', '#3B82F6');     // Bright Blue  
+      root.style.setProperty('--color-border-primary', '#E5E7EB');  // Light cool border
+      root.style.setProperty('--color-border-secondary', '#D1D5DB'); // Medium cool border
+      root.style.setProperty('--color-shadow', 'rgba(0, 0, 0, 0.08)'); // Subtle shadows
     } else {
-      // Dark theme - keep existing dark colors
-      root.style.setProperty('--color-bg-primary', '#0d1117');
-      root.style.setProperty('--color-bg-secondary', '#161b22');
-      root.style.setProperty('--color-bg-tertiary', '#21262d');
-      root.style.setProperty('--color-text-primary', '#ffffff');
-      root.style.setProperty('--color-text-secondary', '#8b949e');
-      root.style.setProperty('--color-text-muted', '#656d76');
-      root.style.setProperty('--color-accent-primary', '#1DB954');
-      root.style.setProperty('--color-accent-hover', '#1ed760');
-      root.style.setProperty('--color-accent-secondary', '#FD79A8');
-      root.style.setProperty('--color-accent-warning', '#FFC107');
-      root.style.setProperty('--color-accent-info', '#74B9FF');
-      root.style.setProperty('--color-border-primary', '#30363d');
-      root.style.setProperty('--color-border-secondary', '#444c56');
-      root.style.setProperty('--color-shadow', 'rgba(0, 0, 0, 0.3)');
+      // Dark theme - Rich dark with vibrant accents
+      root.style.setProperty('--color-bg-primary', '#0F0F0F');     // Rich black
+      root.style.setProperty('--color-bg-secondary', '#1A1A1A');   // Dark charcoal
+      root.style.setProperty('--color-bg-tertiary', '#242424');    // Medium dark for cards
+      root.style.setProperty('--color-text-primary', '#FFFFFF');   // Pure white text
+      root.style.setProperty('--color-text-secondary', '#B3B3B3'); // Light grey secondary
+      root.style.setProperty('--color-text-muted', '#737373');     // Medium grey muted
+      root.style.setProperty('--color-accent-primary', '#1DB954'); // Spotify Green
+      root.style.setProperty('--color-accent-hover', '#1ED760');   // Brighter green on hover
+      root.style.setProperty('--color-accent-secondary', '#FF1493'); // Hot Pink
+      root.style.setProperty('--color-accent-warning', '#FFA500');  // Orange
+      root.style.setProperty('--color-accent-info', '#00BFFF');     // Deep Sky Blue
+      root.style.setProperty('--color-border-primary', '#404040'); // Medium dark border
+      root.style.setProperty('--color-border-secondary', '#525252'); // Lighter dark border
+      root.style.setProperty('--color-shadow', 'rgba(0, 0, 0, 0.4)'); // Rich shadows
     }
   };
 
