@@ -170,6 +170,7 @@ def get_artist_top_tracks(
     parse_docstring=True,
 )
 def get_track_recommendations(
+    config: RunnableConfig,
     seed_tracks: Optional[List[str]] = None,
     seed_artists: Optional[List[str]] = None,
     seed_genres: Optional[List[str]] = None,
@@ -216,7 +217,6 @@ def get_track_recommendations(
     min_valence: Optional[float] = None,
     max_valence: Optional[float] = None,
     target_valence: Optional[float] = None,
-    config: Optional[RunnableConfig] = None,
 ) -> List[Dict[str, Any]]:
     """Get track recommendations based on seeds and tunable audio features.
 
@@ -366,9 +366,7 @@ def get_track_recommendations(
         if target_valence is not None:
             audio_features["target_valence"] = target_valence
 
-        spotify_client = (
-            config["configurable"].get("spotify_client") if config else None
-        )
+        spotify_client = config["configurable"].get("spotify_client")
         if not spotify_client:
             logger.error("Spotify client not found in config")
             return []
@@ -632,7 +630,7 @@ def get_playlist_tracks(
             "total_tracks": playlist["tracks"]["total"],
             "owner": playlist.get("owner", {}).get("display_name") or "Unknown",
             "tracks": tracks,
-            "images": playlist.get("images", []),
+            "images": playlist.get("images") or [],
         }
         
         logger.info(f"Successfully retrieved {len(tracks)} tracks from playlist {playlist_id}")

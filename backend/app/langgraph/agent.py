@@ -17,27 +17,33 @@ from .state import AgentState
 
 # Load environment variables
 from dotenv import load_dotenv
-load_dotenv("/Users/liavalter/Projects/test_spotify/backend/.env")
+
+load_dotenv()
 
 # Import and configure LangSmith tracing
 try:
     from langsmith import traceable
     from langsmith import Client as LangSmithClient
-    
+
     # Initialize LangSmith client if API key is available
     langsmith_client = None
-    if os.getenv("LANGSMITH_API_KEY") and os.getenv("LANGSMITH_TRACING_ENABLED", "true").lower() == "true":
+    if (
+        os.getenv("LANGSMITH_API_KEY")
+        and os.getenv("LANGSMITH_TRACING_ENABLED", "true").lower() == "true"
+    ):
         langsmith_client = LangSmithClient(
             api_key=os.getenv("LANGSMITH_API_KEY"),
-            api_url=os.getenv("LANGSMITH_API_URL", "https://api.smith.langchain.com")
+            api_url=os.getenv("LANGSMITH_API_URL", "https://api.smith.langchain.com"),
         )
         # Set environment variables for automatic tracing
         os.environ["LANGCHAIN_TRACING_V2"] = "true"
-        os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGSMITH_PROJECT", "spotify-ai-playlist-generator")
+        os.environ["LANGCHAIN_PROJECT"] = os.getenv(
+            "LANGSMITH_PROJECT", "spotify-ai-playlist-generator"
+        )
         print("✅ LangSmith tracing initialized")
     else:
         print("ℹ️  LangSmith tracing disabled - no API key provided")
-        
+
 except ImportError:
     print("⚠️  LangSmith not available - install langsmith package for tracing")
     traceable = lambda func: func  # No-op decorator
@@ -124,14 +130,16 @@ async def call_model(state, config):
 
     logger = logging.getLogger(__name__)
     logger.debug(f"🤖 call_model started with state keys: {list(state.keys())}")
-    
+
     # Add tracing metadata
     if langsmith_client:
         metadata = {
             "user_intent": state.get("user_intent", ""),
             "playlist_id": state.get("playlist_id"),
             "message_count": len(state.get("messages", [])),
-            "has_spotify_client": bool(config.get("configurable", {}).get("spotify_client"))
+            "has_spotify_client": bool(
+                config.get("configurable", {}).get("spotify_client")
+            ),
         }
 
     # Add system prompt if first turn or use provided system prompt
@@ -158,6 +166,12 @@ You have access to powerful Spotify tools to fulfill playlist requests:
 - `create_playlist`: Create a new playlist (returns playlist ID)
 - `add_tracks_to_playlist`: Add tracks to an existing playlist using track URIs
 
+# TOOL USAGE STRATEGIES:
+- **Search first, recommend second**: Use search for specific requests, recommendations for discovery
+- **Combine tools smartly**: Get artist top tracks, then use as seeds for recommendations
+- **Fallback patterns**: If search fails, try recommendations with genre seeds
+- **Error handling**: Always check for empty results and try alternative approaches
+
 # ReAct METHODOLOGY:
 Use the Reason-Act-Observe pattern:
 
@@ -170,7 +184,7 @@ Use the Reason-Act-Observe pattern:
 **ACT**: Use tools strategically:
 1. Start by understanding the request fully
 2. Gather tracks using search, recommendations, or artist catalogs
-3. Use audio features intelligently (danceability for party playlists, acousticness for chill vibes, etc.)
+3. Use audio features intelligently for precise curation
 4. Create the playlist with a meaningful name and description
 5. Add carefully curated tracks
 
@@ -191,31 +205,91 @@ Use the Reason-Act-Observe pattern:
 
 **IMPORTANT**: After adding tracks to a playlist, ALWAYS use `get_playlist_tracks` to fetch the complete playlist data with tracks, album covers, and metadata before finishing.
 
-# AUDIO FEATURES EXPERTISE:
+# COMPLETE AUDIO FEATURES EXPERTISE:
 Use these strategically in recommendations:
-- **Energy**: 0.0-1.0 (low=ballads, high=rock/electronic)
+- **Energy**: 0.0-1.0 (low=ballads/ambient, high=rock/EDM)
 - **Danceability**: 0.0-1.0 (how suitable for dancing)
-- **Valence**: 0.0-1.0 (musical positivity, 0=sad, 1=happy)
-- **Acousticness**: 0.0-1.0 (acoustic vs electronic)
-- **Tempo**: BPM (beats per minute for pacing)
-- **Instrumentalness**: 0.0-1.0 (vocal vs instrumental)
+- **Valence**: 0.0-1.0 (musical positivity, 0=sad/dark, 1=happy/euphoric)
+- **Acousticness**: 0.0-1.0 (acoustic vs electronic/produced)
+- **Tempo**: BPM (60-200+ typical range, affects pacing)
+- **Instrumentalness**: 0.0-1.0 (vocal vs instrumental content)
 - **Popularity**: 0-100 (mainstream vs niche tracks)
+- **Key**: 0-11 (C, C#, D, D#, E, F, F#, G, G#, A, A#, B)
+- **Mode**: 0=minor, 1=major (affects emotional tone)
+- **Liveness**: 0.0-1.0 (live performance vs studio recording)
+- **Loudness**: -60 to 0 dB (overall loudness, affects intensity)
+- **Speechiness**: 0.0-1.0 (spoken word content, 0.33-0.66=rap, >0.66=talk/poetry)
+- **Time Signature**: 3, 4, 5, 6, 7 (beats per measure, affects groove)
+
+# ADVANCED PLAYLIST FLOW STRATEGIES:
+
+## Energy Progression Patterns:
+- **Gradual Buildup**: Start low energy (0.3), gradually increase to peak (0.8+)
+- **Peak & Valley**: Alternate high/low energy for dynamic listening
+- **Sustained Energy**: Maintain consistent energy level throughout
+- **Cool Down**: Start high, gradually decrease for relaxation
+
+## Genre Transition Techniques:
+- **Bridge Artists**: Use artists who span multiple genres
+- **Tempo Matching**: Keep BPM similar when changing genres
+- **Key Progression**: Use music theory for smooth harmonic transitions
+- **Mood Consistency**: Maintain valence/energy when switching styles
+
+## Playlist Archetypes:
+- **Workout**: High energy (0.7+), high danceability (0.6+), fast tempo (120+ BPM)
+- **Focus/Study**: Low energy (0.3-0.5), high instrumentalness (0.5+), minimal speechiness
+- **Party**: High danceability (0.7+), high valence (0.6+), popular tracks (60+)
+- **Chill**: High acousticness (0.4+), low energy (0.4-), moderate tempo (80-120 BPM)
+- **Road Trip**: Varied energy, high familiarity, sing-along potential
+- **Sleep**: Very low energy (0.2-), high acousticness (0.6+), slow tempo (60-90 BPM)
+
+# SMART CURATION STRATEGIES:
+
+## Balancing Act:
+- **80/20 Rule**: 80% crowd-pleasers, 20% discoveries
+- **Peak Positioning**: Place strongest tracks at positions 3, 7, 12, 18
+- **Variety Spacing**: Don't place similar artists/genres consecutively
+- **Intro/Outro**: Strong opener, memorable closer
+
+## Handling User Constraints:
+- **Explicit Content**: Check user preferences, filter accordingly
+- **Time Periods**: Use release date filters for decade-specific requests
+- **Regional Preferences**: Consider local artists and cultural context
+- **Activity Matching**: Align tempo and energy with intended use case
+
+# EDGE CASE HANDLING:
+
+## When Searches Fail:
+- Try broader search terms or genre seeds
+- Use similar artists as fallback
+- Recommend based on successful partial results
+
+## Conflicting Requests:
+- Prioritize primary mood over secondary preferences
+- Explain trade-offs made in curation
+- Offer alternative playlist suggestions
+
+## Limited Results:
+- Expand search criteria gradually
+- Use recommendation seeds from available tracks
+- Blend multiple approaches (search + recommendations)
 
 # BEST PRACTICES:
 - Create playlists of 15-30 tracks unless specified otherwise
 - Include a mix of popular and lesser-known tracks
-- Consider playlist flow and energy progression
-- Use descriptive, creative playlist names
+- Consider playlist flow and energy progression using specific patterns above
+- Use descriptive, creative playlist names that capture the vibe
 - Explain your curation choices to educate users
 - Respect user preferences and constraints
+- Always test different audio feature combinations for optimal results
 
 # RESPONSE FORMAT:
 - Think out loud as you work through the request
 - Explain why you're using specific tools or parameters
-- Provide context about tracks and artists you select
-- End with a summary of the completed playlist
+- Provide context about tracks, artists, and audio features you select
+- End with a summary of the completed playlist including flow strategy
 
-Remember: You're not just adding random tracks - you're a skilled curator crafting a musical experience!
+Remember: You're not just adding random tracks - you're a skilled curator crafting a cohesive musical experience with intentional flow and emotional journey!
 """,
         )
 
@@ -242,53 +316,55 @@ async def run_tools(input, config, **kwargs):
 
     logger = logging.getLogger(__name__)
     logger.debug(f"🔧 run_tools called with input keys: {list(input.keys())}")
-    
+
     # Extract tool information for tracing
     tool_calls = []
     if input.get("messages") and len(input["messages"]) > 0:
         last_message = input["messages"][-1]
-        if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
-            tool_calls = [{"name": tool_call["name"], "args": tool_call.get("args", {})} for tool_call in last_message.tool_calls]
-    
+        if hasattr(last_message, "tool_calls") and last_message.tool_calls:
+            tool_calls = [
+                {"name": tool_call["name"], "args": tool_call.get("args", {})}
+                for tool_call in last_message.tool_calls
+            ]
+
     if langsmith_client and tool_calls:
-        metadata = {
-            "tool_calls": tool_calls,
-            "tool_count": len(tool_calls)
-        }
+        metadata = {"tool_calls": tool_calls, "tool_count": len(tool_calls)}
 
     tool_node = ToolNode(get_tools(config))
     logger.debug(f"🔧 Created ToolNode, executing tools")
     result = await tool_node.ainvoke(input, config, **kwargs)
     logger.debug(f"🔧 Tools execution completed")
-    
+
     # Extract playlist information from tool results and update state
     updates = {}
-    
+
     # Check the last message for tool results
     if result.get("messages") and len(result["messages"]) > 0:
         last_message = result["messages"][-1]
-        if hasattr(last_message, 'content'):
+        if hasattr(last_message, "content"):
             # Check for playlist ID
             playlist_id = _maybe_playlist_id(last_message)
             if playlist_id:
                 logger.info(f"🎵 Extracted playlist_id from tool result: {playlist_id}")
                 updates["playlist_id"] = playlist_id
-            
+
             # Check for playlist data
             playlist_data = _maybe_playlist_data(last_message)
             if playlist_data:
-                logger.info(f"🎵 Extracted playlist_data from tool result: {playlist_data.get('name', 'Unknown')}")
+                logger.info(
+                    f"🎵 Extracted playlist_data from tool result: {playlist_data.get('name', 'Unknown')}"
+                )
                 updates["playlist_data"] = playlist_data
                 # Also extract playlist name if not already set
                 if playlist_data.get("name") and not input.get("playlist_name"):
                     updates["playlist_name"] = playlist_data["name"]
                     logger.info(f"🎵 Extracted playlist_name: {playlist_data['name']}")
-    
+
     # Merge updates with result
     if updates:
         result.update(updates)
         logger.debug(f"🎵 Updated state with: {list(updates.keys())}")
-    
+
     return result
 
 

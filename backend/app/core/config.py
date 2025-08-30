@@ -1,12 +1,10 @@
-"""Configuration settings for the application"""
-
 import os
 from typing import Optional
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv("/Users/liavalter/Projects/test_spotify/backend/.env")
+load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -21,14 +19,17 @@ class Settings(BaseSettings):
     frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
     backend_url: str = os.getenv("BACKEND_URL", "http://localhost:8000")
 
-
     # AI Agent Configuration
     openai_api_key: Optional[str] = os.getenv("OPENAI_API_KEY")
 
     # LangSmith tracing configuration
     langsmith_api_key: Optional[str] = os.getenv("LANGSMITH_API_KEY")
-    langsmith_project: Optional[str] = os.getenv("LANGSMITH_PROJECT", "spotify-ai-playlist-generator")
-    langsmith_tracing_enabled: bool = os.getenv("LANGSMITH_TRACING_ENABLED", "true").lower() == "true"
+    langsmith_project: Optional[str] = os.getenv(
+        "LANGSMITH_PROJECT", "spotify-ai-playlist-generator"
+    )
+    langsmith_tracing_enabled: bool = (
+        os.getenv("LANGSMITH_TRACING_ENABLED", "true").lower() == "true"
+    )
 
     # Optional: Langfuse observability
     langfuse_public_key: Optional[str] = os.getenv("LANGFUSE_PUBLIC_KEY")

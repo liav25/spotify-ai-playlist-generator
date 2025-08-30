@@ -1,5 +1,3 @@
-"""Pydantic models for API requests and responses"""
-
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 
@@ -26,7 +24,7 @@ class PlaylistData(BaseModel):
     total_tracks: int
     owner: str
     tracks: List[PlaylistTrack]
-    images: List[Dict[str, Any]] = []
+    images: Optional[List[Dict[str, Any]]] = []
 
 
 class ChatRequest(BaseModel):
@@ -38,7 +36,6 @@ class ChatResponse(BaseModel):
     message: str
     thread_id: str
     playlist_data: Optional[PlaylistData] = None
-
 
 
 class User(BaseModel):
