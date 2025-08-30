@@ -72,7 +72,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
         if (response.playlistData.tracks.length === 0) {
           setTimeout(async () => {
             try {
-              const updatedPlaylist = await chatApi.fetchPlaylist(response.playlistData.id);
+              const updatedPlaylist = await chatApi.fetchPlaylist(response.playlistData!.id);
               if (updatedPlaylist && updatedPlaylist.tracks.length > 0) {
                 setCurrentPlaylist(updatedPlaylist);
               }
