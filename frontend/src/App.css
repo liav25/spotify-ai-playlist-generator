@@ -11,6 +11,118 @@
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Mobile Header */
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-primary);
+  z-index: 200;
+  padding: 0 16px;
+  align-items: center;
+  justify-content: space-between;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.mobile-menu-btn {
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.mobile-menu-btn:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.hamburger-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.mobile-header-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+  margin: 0 16px;
+}
+
+.mobile-logo {
+  width: 24px;
+  height: 24px;
+  background: var(--color-accent-primary);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mobile-logo .spotify-logo {
+  width: 14px;
+  height: 14px;
+  color: white;
+}
+
+.mobile-app-title {
+  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+.mobile-user-avatar {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.mobile-avatar-image {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.mobile-avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--color-accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Mobile Sidebar Backdrop */
+.mobile-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 150;
+}
+
 /* Main Content Area */
 .main-content {
   flex: 1;
@@ -225,9 +337,34 @@
 }
 
 /* Responsive Design */
+/* Large tablets and small desktops */
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 350px;
+  }
+}
+
+/* Tablets and mobile devices */
 @media (max-width: 768px) {
+  /* Show mobile header */
+  .mobile-header {
+    display: flex;
+  }
+  
+  /* Show mobile sidebar backdrop when open */
+  .mobile-sidebar-backdrop {
+    display: block;
+  }
+  
+  /* Adjust main content for mobile */
   .main-content {
     margin-left: 0;
+    padding-top: 60px; /* Account for mobile header */
+  }
+  
+  /* Hide main content when sidebar is open on mobile */
+  .app:has(.sidebar.mobile-open) .main-content {
+    overflow: hidden;
   }
   
   .login-section {
@@ -237,9 +374,80 @@
   .login-section h1 {
     font-size: 28px;
   }
+  
+  /* Login state adjustments for mobile */
+  .app.login-state .main-content {
+    padding-top: 0;
+  }
+  
+  .app.login-state .mobile-header {
+    display: none;
+  }
+}
+
+/* Medium mobile devices */
+@media (max-width: 640px) {
+  .mobile-header {
+    height: 56px;
+    padding: 0 14px;
+  }
+  
+  .main-content {
+    padding-top: 56px;
+  }
+  
+  .mobile-app-title {
+    font-size: 17px;
+  }
+  
+  .mobile-menu-btn {
+    width: 42px;
+    height: 42px;
+  }
+  
+  .hamburger-icon {
+    width: 22px;
+    height: 22px;
+  }
 }
 
 @media (max-width: 480px) {
+  .mobile-header {
+    height: 56px;
+    padding: 0 12px;
+  }
+  
+  .main-content {
+    padding-top: 56px;
+  }
+  
+  .mobile-menu-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .hamburger-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .mobile-app-title {
+    font-size: 16px;
+  }
+  
+  .mobile-user-avatar {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .mobile-avatar-image,
+  .mobile-avatar-placeholder {
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+    font-size: 12px;
+  }
+  
   .login-container {
     padding: 16px;
   }
@@ -260,6 +468,69 @@
     font-size: 14px;
     padding: 10px 20px;
     min-width: 180px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 380px) {
+  .mobile-header {
+    height: 52px;
+    padding: 0 10px;
+  }
+  
+  .main-content {
+    padding-top: 52px;
+  }
+  
+  .mobile-app-title {
+    font-size: 15px;
+  }
+  
+  .mobile-menu-btn {
+    width: 38px;
+    height: 38px;
+  }
+  
+  .hamburger-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .mobile-user-avatar {
+    width: 26px;
+    height: 26px;
+  }
+  
+  .mobile-avatar-image,
+  .mobile-avatar-placeholder {
+    width: 26px;
+    height: 26px;
+    border-radius: 13px;
+    font-size: 11px;
+  }
+  
+  .mobile-logo {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .mobile-logo .spotify-logo {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .login-section {
+    padding: 20px 16px;
+  }
+  
+  .login-section h1 {
+    font-size: 22px;
+  }
+  
+  .spotify-login-btn {
+    font-size: 13px;
+    padding: 8px 16px;
+    min-width: 160px;
   }
 }
 

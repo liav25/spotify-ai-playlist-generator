@@ -56,15 +56,29 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+}
+
+/* Ensure proper sizing on mobile devices */
+html {
+  height: 100%;
+  height: -webkit-fill-available; /* Mobile Safari fix */
+}
+
+#root {
+  min-height: 100vh;
+  min-height: -webkit-fill-available; /* Mobile Safari fix */
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  min-height: -webkit-fill-available; /* Mobile Safari viewport fix */
   background: var(--color-bg-primary);
   position: relative;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
   transition: 
     background-color 0.4s cubic-bezier(0.4, 0.0, 0.2, 1),
     color 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
@@ -104,6 +118,10 @@ body::before {
     @apply font-medium px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105;
     background: var(--color-accent-primary);
     color: white;
+    min-height: 44px; /* Touch target minimum */
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
   }
   
   .btn-primary:hover {
@@ -115,6 +133,10 @@ body::before {
     background: var(--color-bg-tertiary);
     color: var(--color-text-primary);
     border: 2px solid var(--color-border-primary);
+    min-height: 44px; /* Touch target minimum */
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
   }
   
   .btn-secondary:hover {

@@ -17,6 +17,36 @@
   padding: 24px 20px;
   border-bottom: 1px solid var(--color-border-primary);
   transition: border-color 0.3s ease;
+  position: relative;
+}
+
+/* Mobile Close Button */
+.mobile-close-btn {
+  display: none;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-muted);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.mobile-close-btn:hover {
+  background: var(--color-accent-secondary);
+  color: white;
+}
+
+.close-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .logo-section {
@@ -463,20 +493,35 @@
   background: var(--color-border-secondary);
 }
 
+/* Large tablets */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 350px;
+  }
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .sidebar {
     width: 320px;
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    z-index: 160;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   }
   
   .sidebar.mobile-open {
     transform: translateX(0);
   }
   
+  /* Show mobile close button */
+  .mobile-close-btn {
+    display: flex;
+  }
+  
   .sidebar-header {
     padding: 20px 16px;
+    padding-top: 60px; /* Account for close button */
   }
   
   .playlist-header {
@@ -489,5 +534,138 @@
   
   .sidebar-footer {
     padding: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sidebar {
+    width: 300px;
+  }
+  
+  .sidebar-header {
+    padding: 18px 14px;
+    padding-top: 56px;
+  }
+  
+  .mobile-close-btn {
+    width: 30px;
+    height: 30px;
+    top: 13px;
+    right: 13px;
+  }
+  
+  .close-icon {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 280px;
+  }
+  
+  .sidebar-header {
+    padding: 16px 12px;
+    padding-top: 56px;
+  }
+  
+  .mobile-close-btn {
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+  }
+  
+  .close-icon {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .logo-section {
+    margin-bottom: 20px;
+  }
+  
+  .app-title {
+    font-size: 18px;
+  }
+  
+  .playlist-header {
+    padding: 12px;
+  }
+  
+  .playlist-track-item {
+    padding: 6px 12px;
+  }
+  
+  .sidebar-footer {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .sidebar {
+    width: 260px;
+  }
+  
+  .sidebar-header {
+    padding: 14px 10px;
+    padding-top: 52px;
+  }
+  
+  .mobile-close-btn {
+    width: 26px;
+    height: 26px;
+    top: 13px;
+    right: 10px;
+  }
+  
+  .close-icon {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .logo-section {
+    margin-bottom: 16px;
+    gap: 8px;
+  }
+  
+  .logo {
+    width: 26px;
+    height: 26px;
+  }
+  
+  .spotify-logo {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .app-title {
+    font-size: 16px;
+  }
+  
+  .theme-toggle-btn, .new-conversation-btn {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  
+  .playlist-header {
+    padding: 10px;
+  }
+  
+  .playlist-track-item {
+    padding: 4px 10px;
+  }
+  
+  .sidebar-footer {
+    padding: 10px;
+  }
+  
+  .user-name {
+    font-size: 13px;
+  }
+  
+  .user-status {
+    font-size: 11px;
   }
 }

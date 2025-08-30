@@ -131,7 +131,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
   ];
 
   return (
-    <div className="chat-interface">
+    <div className="chat-interface" data-testid="chat-interface">
       {messages.length === 1 && messages[0].role === 'assistant' ? (
         // Show welcome state with preset cards
         <div className="welcome-container">
@@ -168,6 +168,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
             <div
               key={message.id}
               className={`message ${message.role === 'user' ? 'user-message' : 'assistant-message'}`}
+              data-testid="chat-message"
             >
               <div className="message-bubble">
                 <div className="message-content">
@@ -212,12 +213,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
               placeholder="Tell me what kind of playlist you want..."
               disabled={isLoading}
               rows={1}
+              data-testid="chat-input"
             />
             <button
               className="send-button"
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isLoading}
               aria-label="Send message"
+              data-testid="send-button"
             >
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>

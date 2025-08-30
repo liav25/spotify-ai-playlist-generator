@@ -12,9 +12,11 @@ interface SidebarProps {
   } | null;
   onNewConversation: () => void;
   onLogout: () => void;
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ user, onNewConversation, onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({ user, onNewConversation, onLogout, isMobileOpen, onMobileClose }) => {
   const { theme, toggleTheme } = useTheme();
   const { currentPlaylist, isLoading } = usePlaylist();
   const [isThemeSwitching, setIsThemeSwitching] = React.useState(false);
@@ -41,8 +43,18 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNewConversation, onLogout }) 
   };
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
       <div className="sidebar-header">
+        {/* Mobile Close Button */}
+        <button 
+          className="mobile-close-btn" 
+          onClick={onMobileClose}
+          aria-label="Close menu"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" className="close-icon">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </button>
         <div className="logo-section">
           <div className="logo">
             <svg viewBox="0 0 24 24" fill="currentColor" className="spotify-logo">
