@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Spotify AI Playlist Generator - FastAPI Backend
+Mr. DJ - FastAPI Backend
 Handles Spotify OAuth authentication and LangGraph agent integration
 """
 
@@ -63,8 +63,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Spotify AI Playlist Generator",
-    description="FastAPI backend with LangGraph agent for Spotify playlist creation",
+    title="Mr. DJ",
+    description="FastAPI backend with LangGraph agent for Spotify playlist creation by Mr. DJ",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -116,7 +116,7 @@ def generate_random_string(length: int = 32) -> str:
 @app.get("/")
 async def root():
     """Root endpoint"""
-    return {"message": "Spotify AI Playlist Generator API is running"}
+    return {"message": "Mr. DJ API is running"}
 
 
 @app.get("/health")

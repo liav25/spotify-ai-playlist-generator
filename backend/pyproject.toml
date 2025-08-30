@@ -1,7 +1,7 @@
 [project]
 name = "spotify-oauth-backend"
 version = "0.1.0"
-description = "FastAPI backend for Spotify OAuth authentication"
+description = "FastAPI backend for Mr. DJ - AI-powered Spotify playlist generator"
 requires-python = ">=3.12.1"
 dependencies = [
     "fastapi>=0.104.0",

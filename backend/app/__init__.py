@@ -1,1 +1,1 @@
-"""FastAPI backend for Spotify AI Playlist Generator"""
+"""FastAPI backend for Mr. DJ"""

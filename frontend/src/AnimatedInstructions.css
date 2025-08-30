@@ -1,0 +1,286 @@
+/* Animated Instructions Styles */
+.instructions-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 2rem 0;
+  padding: 0 1rem;
+}
+
+.instructions-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.instructions-header h2 {
+  color: var(--text-primary);
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.instructions-header p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.steps-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  min-height: 200px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  padding: 2rem;
+  background: var(--surface-color);
+  border-radius: 1rem;
+  border: 2px solid var(--border-color);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 500px;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.step.active {
+  border-color: var(--accent-color);
+  box-shadow: 0 8px 32px rgba(var(--accent-color-rgb), 0.2);
+  background: linear-gradient(135deg, var(--surface-color) 0%, rgba(var(--accent-color-rgb), 0.05) 100%);
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.step.transitioning {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.95);
+}
+
+.step.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s ease;
+}
+
+.step.active::before {
+  transform: scaleX(1);
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--accent-color);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-right: 1rem;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+  background: var(--accent-hover);
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(var(--accent-color-rgb), 0.4);
+}
+
+.step-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  margin-right: 1.5rem;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.step-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--accent-color);
+  transition: all 0.3s ease;
+}
+
+.step.active .step-icon {
+  color: var(--accent-hover);
+  transform: scale(1.1);
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  transition: color 0.3s ease;
+}
+
+.step.active .step-title {
+  color: var(--accent-color);
+}
+
+.step-description {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0;
+  line-height: 1.5;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.step.active .step-description {
+  opacity: 1;
+}
+
+.progress-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.indicator {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--border-color);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.indicator.active {
+  background: var(--accent-color);
+  transform: scale(1.5);
+  box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .instructions-container {
+    padding: 0 0.5rem;
+  }
+  
+  .steps-container {
+    min-height: 180px;
+  }
+  
+  .instructions-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .step {
+    padding: 1.5rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+    max-width: 400px;
+  }
+  
+  .step-number,
+  .step-icon-container {
+    margin-right: 0;
+  }
+  
+  .step-content {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .instructions-container {
+    margin: 1.5rem 0;
+  }
+  
+  .steps-container {
+    min-height: 160px;
+  }
+  
+  .instructions-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .step {
+    padding: 1rem;
+    max-width: 320px;
+  }
+  
+  .step-number {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+  }
+  
+  .step-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  
+  .step-title {
+    font-size: 1.1rem;
+  }
+  
+  .step-description {
+    font-size: 0.9rem;
+  }
+}
+
+/* Animation for step transitions */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.step.entering {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.step.exiting {
+  animation: fadeOutDown 0.5s ease forwards;
+}
