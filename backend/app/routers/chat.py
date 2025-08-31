@@ -9,8 +9,7 @@ from fastapi import APIRouter, HTTPException, status, Request
 from langchain_core.messages import HumanMessage
 
 from ..api.models import ChatRequest, ChatResponse, PlaylistData
-from ..services.auth_service import get_current_user_from_header
-from ..services.user_service import user_sessions
+from ..services.spotify_service import spotify_service
 from ..langgraph.agent import assistant_ui_graph
 
 logger = logging.getLogger(__name__)
@@ -20,58 +19,23 @@ router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_request: ChatRequest, request: Request):
-    """Chat endpoint that integrates with LangGraph agent"""
-    current_user = await get_current_user_from_header(request)
+    """Chat endpoint that integrates with LangGraph agent using service account"""
     
-    logger.info(
-        f"🚀 Chat request received from user {current_user.id if current_user else 'None'}"
-    )
+    logger.info("🚀 Chat request received (no authentication required)")
     logger.debug(f"📝 Message: {chat_request.message}")
     logger.debug(f"🔗 Thread ID: {chat_request.thread_id}")
 
-    if not current_user:
-        logger.warning("❌ Authentication failed - no current user")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
-        )
-
     try:
-        # Get user session to retrieve Spotify token
-        logger.debug(f"🔍 Looking up user session for {current_user.id}")
-        user_session = user_sessions.get(current_user.id)
-        if not user_session:
-            logger.error(f"❌ No session found for user {current_user.id}")
-            logger.debug(f"Available sessions: {list(user_sessions.keys())}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Session not found"
-            )
-
-        spotify_token = user_session.get("spotify_token")
-        if not spotify_token:
-            logger.error(
-                f"❌ No Spotify token found in session for user {current_user.id}"
-            )
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Spotify token not available",
-            )
-
-        logger.debug(f"✅ Spotify token found, creating client")
-
-        # Create Spotify client with user's token
-        spotify_client = spotipy.Spotify(auth=spotify_token)
-
-        # Test Spotify client
+        # Get service account Spotify client with retry on auth failures
+        logger.debug("🔍 Getting service account Spotify client")
         try:
-            user_info = spotify_client.current_user()
-            logger.debug(
-                f"✅ Spotify client working for user: {user_info.get('display_name')}"
-            )
+            spotify_client = await spotify_service.get_client_with_retry()
+            logger.debug("✅ Service account Spotify client obtained and verified")
         except Exception as e:
-            logger.error(f"❌ Spotify client test failed: {e}")
+            logger.error(f"❌ Service account Spotify client failed: {e}")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Spotify authentication failed",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Service account Spotify authentication failed",
             )
 
         # Generate thread_id if not provided

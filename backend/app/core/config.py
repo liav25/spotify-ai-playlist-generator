@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     spotify_redirect_uri: str = os.getenv(
         "SPOTIFY_REDIRECT_URI", "http://127.0.0.1:8000/callback"
     )
+    
+    # Service Account Configuration (Your Dedicated Account)
+    spotify_service_refresh_token: Optional[str] = os.getenv("SPOTIFY_SERVICE_REFRESH_TOKEN")
+    spotify_service_user_id: Optional[str] = os.getenv("SPOTIFY_SERVICE_USER_ID")
 
     # Application Configuration
     frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
@@ -50,6 +54,10 @@ class Settings(BaseSettings):
             raise ValueError("SPOTIFY_CLIENT_ID is required")
         if not self.spotify_client_secret:
             raise ValueError("SPOTIFY_CLIENT_SECRET is required")
+        if not self.spotify_service_refresh_token:
+            raise ValueError("SPOTIFY_SERVICE_REFRESH_TOKEN is required")
+        if not self.spotify_service_user_id:
+            raise ValueError("SPOTIFY_SERVICE_USER_ID is required")
         if not self.openai_api_key:
             raise ValueError("OPENAI_API_KEY is required")
 

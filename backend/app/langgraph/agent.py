@@ -131,16 +131,10 @@ async def call_model(state, config):
     logger = logging.getLogger(__name__)
     logger.debug(f"🤖 call_model started with state keys: {list(state.keys())}")
 
-    # Add tracing metadata
+    # Add tracing metadata (if LangSmith is available)
     if langsmith_client:
-        metadata = {
-            "user_intent": state.get("user_intent", ""),
-            "playlist_id": state.get("playlist_id"),
-            "message_count": len(state.get("messages", [])),
-            "has_spotify_client": bool(
-                config.get("configurable", {}).get("spotify_client")
-            ),
-        }
+        # Metadata for tracing context
+        pass
 
     # Add system prompt if first turn or use provided system prompt
     if not any(isinstance(m, SystemMessage) for m in state["messages"]):
@@ -201,9 +195,16 @@ Use the Reason-Act-Observe pattern:
 5. **Create**: Make the playlist with a creative, descriptive name
 6. **Populate**: Add tracks to the playlist
 7. **Retrieve**: Use get_playlist_tracks to fetch the final playlist with all tracks and metadata
-8. **Summarize**: Explain your choices and playlist characteristics
+8. **Present**: Provide a PROMINENT, BOLD Spotify link that users can't miss
+9. **Summarize**: Explain your choices and playlist characteristics
 
-**IMPORTANT**: After adding tracks to a playlist, ALWAYS use `get_playlist_tracks` to fetch the complete playlist data with tracks, album covers, and metadata before finishing.
+**CRITICAL**: After creating any playlist, you MUST:
+1. Use `get_playlist_tracks` to fetch the complete playlist data
+2. Provide a **BIG, BOLD** Spotify link in this format: 
+
+## 🎵 **[YOUR PLAYLIST NAME](https://open.spotify.com/playlist/PLAYLIST_ID)**
+
+Make this link highly visible - use large text, bold formatting, and emojis to ensure users notice it immediately.
 
 # COMPLETE AUDIO FEATURES EXPERTISE:
 Use these strategically in recommendations:
@@ -287,7 +288,10 @@ Use these strategically in recommendations:
 - Think out loud as you work through the request
 - Explain why you're using specific tools or parameters
 - Provide context about tracks, artists, and audio features you select
+- **ALWAYS provide the Spotify playlist link in BIG, BOLD format as shown above**
 - End with a summary of the completed playlist including flow strategy
+
+**REMINDER**: Every playlist creation MUST end with a prominent Spotify link that users can easily click to access their playlist. This is CRITICAL since users can't access the playlist any other way.
 
 Remember: You're not just adding random tracks - you're a skilled curator crafting a cohesive musical experience with intentional flow and emotional journey!
 """,
@@ -328,7 +332,8 @@ async def run_tools(input, config, **kwargs):
             ]
 
     if langsmith_client and tool_calls:
-        metadata = {"tool_calls": tool_calls, "tool_count": len(tool_calls)}
+        # Metadata for tracing context
+        pass
 
     tool_node = ToolNode(get_tools(config))
     logger.debug(f"🔧 Created ToolNode, executing tools")

@@ -186,10 +186,171 @@
   margin: 0;
 }
 
+/* RTL Support - handled at element level now */
+
 /* Preserve line breaks in messages */
 .message-line {
   margin: 0;
   white-space: pre-wrap;
+}
+
+/* Markdown Links */
+.message-link {
+  color: var(--color-accent-primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.message-link:hover {
+  color: var(--color-accent-hover);
+  border-bottom-color: var(--color-accent-hover);
+  text-decoration: none;
+}
+
+.user-message .message-link {
+  color: rgba(255, 255, 255, 0.9);
+  border-bottom-color: rgba(255, 255, 255, 0.3);
+}
+
+.user-message .message-link:hover {
+  color: white;
+  border-bottom-color: white;
+}
+
+/* Markdown Images */
+.message-image {
+  max-width: 50px;
+  max-height: 50px;
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  margin: 0 12px 0 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+  display: inline-block;
+  vertical-align: top;
+  flex-shrink: 0;
+}
+
+/* Markdown formatting */
+.message-content h1,
+.message-content h2,
+.message-content h3 {
+  color: var(--color-text-primary);
+  margin: 12px 0 8px 0;
+  line-height: 1.3;
+}
+
+.message-content h1 { font-size: 1.4em; font-weight: 600; }
+.message-content h2 { font-size: 1.2em; font-weight: 600; }
+.message-content h3 { font-size: 1.1em; font-weight: 600; }
+
+.message-content ul,
+.message-content ol {
+  margin: 12px 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.message-content li {
+  margin: 12px 0;
+  padding: 8px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  border-bottom: 1px solid var(--color-border-primary);
+  padding-bottom: 12px;
+}
+
+.message-content li:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+/* Track numbering */
+.message-content ol {
+  counter-reset: track-counter;
+}
+
+.message-content ol li {
+  counter-increment: track-counter;
+  position: relative;
+}
+
+.message-content ol li::before {
+  content: counter(track-counter) ". ";
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-right: 8px;
+  min-width: 24px;
+  flex-shrink: 0;
+}
+
+/* RTL support for lists */
+.message-content[dir="rtl"] ol li {
+  flex-direction: row-reverse;
+}
+
+.message-content[dir="rtl"] ol li::before {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+.message-content[dir="rtl"] .message-image {
+  margin: 0 0 0 12px;
+}
+
+/* Mixed content support - for lists that contain both LTR and RTL text */
+.message-content ol li {
+  text-align: initial; /* Allow individual items to determine their own direction */
+}
+
+.message-content[dir="rtl"] h1,
+.message-content[dir="rtl"] h2,
+.message-content[dir="rtl"] h3 {
+  text-align: right;
+}
+
+.message-content[dir="ltr"] h1,
+.message-content[dir="ltr"] h2,
+.message-content[dir="ltr"] h3 {
+  text-align: left;
+}
+
+.message-content strong {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.message-content em {
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.message-content code {
+  background: var(--color-bg-tertiary);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.9em;
+  color: var(--color-text-primary);
+}
+
+.message-content pre {
+  background: var(--color-bg-tertiary);
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 8px 0;
+  border: 1px solid var(--color-border-primary);
+}
+
+.message-content pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
 }
 
 /* Typing Indicator */

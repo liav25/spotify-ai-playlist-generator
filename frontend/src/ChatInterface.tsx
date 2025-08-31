@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { chatApi, ChatMessage } from './chatApi';
 import { usePlaylist } from './PlaylistContext';
 import './ChatInterface.css';
@@ -26,7 +27,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
     const welcomeMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'assistant',
-      content: `Hi ${username}! I'm Mr. DJ, your AI music assistant. I can help you create amazing playlists based on your preferences, mood, or any specific requirements you have in mind.\n\nTry asking me something like:\n• \"Create a chill indie playlist for studying\"\n• \"Make an upbeat workout mix\"\n• \"Generate a road trip playlist with 90s hits\"\n\nWhat kind of playlist would you like to create today?`,
+      content: `Hi there! I'm Mr. DJ, your AI music assistant. I can create amazing playlists for you on Spotify based on your preferences, mood, or any specific requirements you have in mind.\n\n**No login required!** All playlists are created and ready to enjoy instantly.\n\nTry asking me something like:\n• \"Create a chill indie playlist for studying\"\n• \"Make an upbeat workout mix\"\n• \"Generate a road trip playlist with 90s hits\"\n\nWhat kind of playlist would you like to create today?`,
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
@@ -104,11 +105,35 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
     }
   };
 
-  const handlePresetClick = (title: string) => {
-    setInputValue(title);
+  const handlePresetClick = (description: string) => {
+    setInputValue(description);
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
+  };
+
+  // Function to detect if text contains Hebrew characters
+  const containsHebrew = (text: string): boolean => {
+    const hebrewRegex = /[\u0590-\u05FF]/;
+    return hebrewRegex.test(text);
+  };
+
+  // Function to determine text direction
+  const getTextDirection = (text: string): 'rtl' | 'ltr' => {
+    return containsHebrew(text) ? 'rtl' : 'ltr';
+  };
+
+  // Extract text content from React children
+  const extractTextContent = (children: React.ReactNode): string => {
+    if (typeof children === 'string') return children;
+    if (typeof children === 'number') return children.toString();
+    if (Array.isArray(children)) {
+      return children.map(extractTextContent).join('');
+    }
+    if (children && typeof children === 'object' && 'props' in children) {
+      return extractTextContent((children as any).props.children);
+    }
+    return children?.toString() || '';
   };
 
 
@@ -116,17 +141,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
     {
       title: "Create a workout playlist",
       icon: "🏃",
-      description: "High-energy tracks for your fitness routine"
+      description: "I need energizing music to fuel my workouts and keep me motivated during exercise. Please create a high-tempo playlist with upbeat songs that will help me maintain intensity and push through challenging sets. Include genres like electronic, hip-hop, rock, or pop with strong beats and motivational lyrics. The playlist should flow well from warm-up to peak intensity tracks."
     },
     {
       title: "Make a chill evening playlist", 
       icon: "🌙",
-      description: "Relaxing tunes for winding down"
+      description: "I want to unwind after a long day with soothing, relaxing music that helps me transition into evening mode. Create a mellow playlist perfect for reading, cooking dinner, or simply decompressing at home. Focus on acoustic, indie, ambient, or soft pop tracks with calm vocals and gentle instrumentation. The mood should be peaceful and contemplative, helping me slow down and relax."
     },
     {
       title: "Road trip music mix",
       icon: "🚗", 
-      description: "Perfect songs for long drives"
+      description: "I'm planning a road trip and need the perfect soundtrack for hours of driving with friends or family. Create an engaging playlist that captures the spirit of adventure and keeps energy levels up during long stretches of highway. Include classic rock, indie favorites, sing-along anthems, and feel-good hits that everyone can enjoy. The songs should evoke feelings of freedom, wanderlust, and the joy of the open road."
     }
   ];
 
@@ -142,7 +167,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
               </svg>
             </div>
             <h1>Welcome to Mr. DJ</h1>
-            <p>I'm your AI playlist curator. Tell me what you're in the mood for, and I'll create the perfect playlist for you on Spotify.</p>
+            <p>I'm your AI playlist curator. Tell me what you're in the mood for, and I'll create the perfect playlist for you on Spotify. <strong>No login required!</strong></p>
           </div>
           
           <div className="preset-cards">
@@ -150,12 +175,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
               <div
                 key={index}
                 className="preset-card"
-                onClick={() => handlePresetClick(preset.title)}
+                onClick={() => handlePresetClick(preset.description)}
               >
                 <div className="preset-icon">{preset.icon}</div>
                 <div className="preset-content">
                   <h3>{preset.title}</h3>
-                  <p>{preset.description}</p>
                 </div>
               </div>
             ))}
@@ -172,11 +196,91 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
             >
               <div className="message-bubble">
                 <div className="message-content">
-                  {message.content.split('\n').map((line, index) => (
-                    <div key={index} className="message-line">
-                      {line || '\u00A0'}
-                    </div>
-                  ))}
+                  {message.role === 'assistant' ? (
+                    <ReactMarkdown
+                      components={{
+                        a: ({ href, children }) => (
+                          <a 
+                            href={href} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="message-link"
+                          >
+                            {children}
+                          </a>
+                        ),
+                        img: () => null, // Hide images to keep track lists clean
+                        li: ({ children }) => {
+                          const textContent = extractTextContent(children);
+                          return (
+                            <li 
+                              dir={getTextDirection(textContent)}
+                              style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
+                            >
+                              {children}
+                            </li>
+                          );
+                        },
+                        p: ({ children }) => {
+                          const textContent = extractTextContent(children);
+                          return (
+                            <p 
+                              dir={getTextDirection(textContent)}
+                              style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
+                            >
+                              {children}
+                            </p>
+                          );
+                        },
+                        h1: ({ children }) => {
+                          const textContent = extractTextContent(children);
+                          return (
+                            <h1 
+                              dir={getTextDirection(textContent)}
+                              style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
+                            >
+                              {children}
+                            </h1>
+                          );
+                        },
+                        h2: ({ children }) => {
+                          const textContent = extractTextContent(children);
+                          return (
+                            <h2 
+                              dir={getTextDirection(textContent)}
+                              style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
+                            >
+                              {children}
+                            </h2>
+                          );
+                        },
+                        h3: ({ children }) => {
+                          const textContent = extractTextContent(children);
+                          return (
+                            <h3 
+                              dir={getTextDirection(textContent)}
+                              style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
+                            >
+                              {children}
+                            </h3>
+                          );
+                        }
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  ) : (
+                    message.content.split('\n').map((line, index) => (
+                      <div 
+                        key={index} 
+                        className="message-line"
+                        dir={getTextDirection(line)}
+                        style={{ textAlign: getTextDirection(line) === 'rtl' ? 'right' : 'left' }}
+                      >
+                        {line || '\u00A0'}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

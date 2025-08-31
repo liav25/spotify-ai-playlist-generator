@@ -90,3 +90,5 @@ playwright-report/
 # Temporary files
 tmp/
 temp/
+
+get_service_token.py
