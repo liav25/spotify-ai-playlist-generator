@@ -13,7 +13,6 @@ from fastapi.responses import RedirectResponse
 
 from ..core.config import settings
 from ..api.models import User, SpotifyTokenResponse
-from ..services.user_service import user_sessions
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +116,7 @@ async def spotify_callback(code: str, state: str):
 
         # Generate a simple session token
         session_token = generate_random_string(32)
-        
+
         # Store user session with Spotify token
         user_sessions[user.id] = {
             "user": user,
