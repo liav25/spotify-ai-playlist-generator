@@ -6,17 +6,11 @@ import './Sidebar.css';
 
 
 interface SidebarProps {
-  user: {
-    display_name: string;
-    images?: Array<{ url: string }>;
-  } | null;
-  onNewConversation: () => void;
-  onLogout: () => void;
   isMobileOpen?: boolean;
   onMobileClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ user, onNewConversation, onLogout, isMobileOpen, onMobileClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
   const { theme, toggleTheme } = useTheme();
   const { currentPlaylist, isLoading } = usePlaylist();
   const [isThemeSwitching, setIsThemeSwitching] = React.useState(false);
@@ -82,13 +76,6 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNewConversation, onLogout, is
               </svg>
             )}
           </button>
-          
-          <button className="new-conversation-btn" onClick={onNewConversation}>
-            <svg viewBox="0 0 24 24" fill="currentColor" className="plus-icon">
-              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-            </svg>
-            New Conversation
-          </button>
         </div>
       </div>
 
@@ -147,34 +134,6 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNewConversation, onLogout, is
         )}
       </div>
 
-      {user && (
-        <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar-container">
-              {user.images && user.images.length > 0 ? (
-                <img 
-                  src={user.images[0].url} 
-                  alt={user.display_name}
-                  className="user-avatar"
-                />
-              ) : (
-                <div className="user-avatar-placeholder">
-                  {user.display_name.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-            <div className="user-details">
-              <div className="user-name">{user.display_name}</div>
-              <div className="user-status">Ready to create playlists</div>
-            </div>
-            <button className="logout-btn" onClick={onLogout} title="Sign out">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="logout-icon">
-                <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

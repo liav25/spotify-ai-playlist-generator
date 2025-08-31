@@ -23,14 +23,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
 
   useEffect(() => {
     chatApi.setUsername(username);
-    // Add welcome message when chat interface loads
-    const welcomeMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'assistant',
-      content: `Hi there! I'm Mr. DJ, your AI music assistant. I can create amazing playlists for you on Spotify based on your preferences, mood, or any specific requirements you have in mind.\n\n**No login required!** All playlists are created and ready to enjoy instantly.\n\nTry asking me something like:\n• \"Create a chill indie playlist for studying\"\n• \"Make an upbeat workout mix\"\n• \"Generate a road trip playlist with 90s hits\"\n\nWhat kind of playlist would you like to create today?`,
-      timestamp: new Date()
-    };
-    setMessages([welcomeMessage]);
+    // Start with empty messages - no welcome message
+    setMessages([]);
   }, [username]);
 
   // Auto-resize textarea
@@ -157,8 +151,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
 
   return (
     <div className="chat-interface" data-testid="chat-interface">
-      {messages.length === 1 && messages[0].role === 'assistant' ? (
-        // Show welcome state with preset cards
+      {messages.length === 0 ? (
+        // Show welcome state with preset cards when no messages
         <div className="welcome-container">
           <div className="welcome-header">
             <div className="welcome-icon">
@@ -307,30 +301,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
       {/* Input Area */}
       <div className="input-area">
         <div className="input-container">
-          <div className="input-wrapper">
-            <textarea
-              ref={textareaRef}
-              className="message-input"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Tell me what kind of playlist you want..."
-              disabled={isLoading}
-              rows={1}
-              data-testid="chat-input"
-            />
-            <button
-              className="send-button"
-              onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isLoading}
-              aria-label="Send message"
-              data-testid="send-button"
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-              </svg>
-            </button>
-          </div>
+          <textarea
+            ref={textareaRef}
+            className="message-input"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Tell me what kind of playlist you want..."
+            disabled={isLoading}
+            rows={1}
+            data-testid="chat-input"
+          />
+          <button
+            className="send-button"
+            onClick={handleSendMessage}
+            disabled={!inputValue.trim() || isLoading}
+            aria-label="Send message"
+            data-testid="send-button"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>

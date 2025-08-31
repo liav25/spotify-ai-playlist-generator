@@ -419,16 +419,11 @@
   max-width: 100%;
 }
 
-.input-wrapper {
-  flex: 1;
-  position: relative;
-}
-
 .message-input {
-  width: 100%;
+  flex: 1;
   min-height: 52px;
   max-height: 120px;
-  padding: 14px 50px 14px 16px;
+  padding: 14px 16px;
   border: 1px solid var(--color-border-primary);
   border-radius: 26px;
   background: var(--color-bg-secondary);
@@ -458,14 +453,11 @@
 
 /* Send Button */
 .send-button {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  width: 36px;
-  height: 36px;
+  width: 52px;
+  height: 52px;
   background: var(--color-accent-primary);
   border: none;
-  border-radius: 18px;
+  border-radius: 26px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -473,6 +465,7 @@
   transition: all 0.3s ease;
   opacity: 0;
   transform: scale(0.8);
+  flex-shrink: 0;
 }
 
 .send-button:not(:disabled) {
@@ -581,14 +574,12 @@
   /* Input optimizations for mobile */
   .message-input {
     font-size: 16px; /* Prevent zoom on iOS */
-    padding: 14px 50px 14px 16px;
+    padding: 14px 16px;
   }
   
   .send-button {
     width: 40px;
     height: 40px;
-    right: 6px;
-    bottom: 6px;
   }
   
   .send-button svg {
@@ -633,15 +624,13 @@
   }
   
   .message-input {
-    padding: 12px 48px 12px 14px;
+    padding: 12px 14px;
     min-height: 44px;
   }
   
   .send-button {
-    width: 36px;
-    height: 36px;
-    right: 6px;
-    bottom: 6px;
+    width: 44px;
+    height: 44px;
   }
 }
 
@@ -701,18 +690,16 @@
   }
   
   .message-input {
-    padding: 12px 44px 12px 12px;
+    padding: 12px;
     min-height: 44px;
     font-size: 16px;
     border-radius: 22px;
   }
   
   .send-button {
-    width: 32px;
-    height: 32px;
-    right: 6px;
-    bottom: 6px;
-    border-radius: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
   }
   
   .send-button svg {
@@ -758,17 +745,15 @@
   }
   
   .message-input {
-    padding: 10px 40px 10px 10px;
+    padding: 10px;
     min-height: 40px;
     border-radius: 20px;
   }
   
   .send-button {
-    width: 28px;
-    height: 28px;
-    right: 6px;
-    bottom: 6px;
-    border-radius: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
   }
   
   .send-button svg {

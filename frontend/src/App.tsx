@@ -3,8 +3,7 @@ import './App.css'
 import ChatInterface from './ChatInterface'
 import Sidebar from './Sidebar'
 import { ThemeProvider } from './ThemeContext'
-import { PlaylistProvider, usePlaylist } from './PlaylistContext'
-import { chatApi } from './chatApi'
+import { PlaylistProvider } from './PlaylistContext'
 
 
 interface User {
@@ -35,31 +34,18 @@ function App() {
     }
   }, [])
 
-  const handleLogout = () => {
-    // No-op for now - could be used later for clearing conversations
-    console.log('Logout clicked - no action needed in service account mode')
-  }
 
   return (
     <ThemeProvider>
       <PlaylistProvider>
-        <AppContent user={user} onLogout={handleLogout} />
+        <AppContent user={user} />
       </PlaylistProvider>
     </ThemeProvider>
   )
 }
 
-function AppContent({ user, onLogout }: { user: User; onLogout: () => void }) {
-  const { setCurrentPlaylist } = usePlaylist()
+function AppContent({ user }: { user: User }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
-  
-  const handleNewConversation = () => {
-    // Reset the conversation thread and clear the current playlist
-    chatApi.resetThread()
-    setCurrentPlaylist(null)
-    // Close mobile sidebar when starting new conversation
-    setIsMobileSidebarOpen(false)
-  }
 
   const toggleMobileSidebar = () => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen)
@@ -91,12 +77,6 @@ function AppContent({ user, onLogout }: { user: User; onLogout: () => void }) {
           </div>
           <h1 className="mobile-app-title">Mr. DJ</h1>
         </div>
-        
-        <div className="mobile-user-avatar">
-          <div className="mobile-avatar-placeholder">
-            🎵
-          </div>
-        </div>
       </div>
       
       {/* Mobile Sidebar Backdrop */}
@@ -105,9 +85,6 @@ function AppContent({ user, onLogout }: { user: User; onLogout: () => void }) {
       )}
       
       <Sidebar 
-        user={user}
-        onNewConversation={handleNewConversation}
-        onLogout={onLogout}
         isMobileOpen={isMobileSidebarOpen}
         onMobileClose={closeMobileSidebar}
       />
