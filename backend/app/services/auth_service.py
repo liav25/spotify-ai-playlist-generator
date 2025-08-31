@@ -6,6 +6,7 @@ from typing import Optional
 from fastapi import Request
 
 from ..api.models import User
+from .user_service import user_sessions
 
 
 async def get_current_user_from_header(request: Request) -> Optional[User]:
