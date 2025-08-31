@@ -8,7 +8,6 @@ from fastapi import APIRouter, HTTPException, status, Request
 
 from ..api.models import User, PlaylistData
 from ..services.auth_service import get_current_user_from_header
-from ..services.user_service import user_sessions
 
 logger = logging.getLogger(__name__)
 

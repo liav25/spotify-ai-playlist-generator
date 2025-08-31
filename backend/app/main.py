@@ -38,37 +38,45 @@ async def lifespan(app: FastAPI):
         # Validate basic configuration
         settings.validate_required_settings()
         logger.info("✅ Configuration validation passed")
-        
+
         # Validate Spotify service account
         logger.info("🔄 Validating Spotify service account...")
         service_validation = await spotify_service.validate_service_account()
-        
+
         if service_validation["status"] == "valid":
             user_info = service_validation
-            logger.info(f"✅ Spotify service account validated: {user_info['display_name']} ({user_info['user_id']})")
-            logger.info(f"📊 Account details: {user_info['product']} subscription, {user_info['followers']} followers")
+            logger.info(
+                f"✅ Spotify service account validated: {user_info['display_name']} ({user_info['user_id']})"
+            )
+            logger.info(
+                f"📊 Account details: {user_info['product']} subscription, {user_info['followers']} followers"
+            )
         else:
-            logger.error(f"❌ Spotify service account validation failed: {service_validation['error']}")
+            logger.error(
+                f"❌ Spotify service account validation failed: {service_validation['error']}"
+            )
             logger.error("🔧 To fix this issue:")
             logger.error("   1. Run: python generate_refresh_token.py")
             logger.error("   2. Follow the instructions to get a new refresh token")
-            logger.error("   3. Update your .env file with the new SPOTIFY_SERVICE_REFRESH_TOKEN")
+            logger.error(
+                "   3. Update your .env file with the new SPOTIFY_SERVICE_REFRESH_TOKEN"
+            )
             logger.error("   4. Restart the application")
-            
+
             # Don't fail startup, but warn about limited functionality
             logger.warning("⚠️  Application started with limited Spotify functionality")
-        
+
         logger.info("🚀 Application started successfully")
-        
+
     except ValueError as e:
         logger.error(f"❌ Configuration error: {e}")
         raise
     except Exception as e:
         logger.error(f"❌ Startup error: {e}")
         raise
-        
+
     yield
-    
+
     # Shutdown
     logger.info("Application shutting down")
 
@@ -87,10 +95,12 @@ allowed_origins = [settings.frontend_url]
 # For now, we'll be explicit about allowed origins
 if "localhost" not in settings.frontend_url:
     # Production mode - add common development origins for testing
-    allowed_origins.extend([
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ])
+    allowed_origins.extend(
+        [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ]
+    )
 
 app.add_middleware(
     CORSMiddleware,
@@ -107,7 +117,9 @@ app.include_router(chat.router, prefix="/api", tags=["chat"])
 
 # Include callback route at root level for Spotify OAuth
 from .routers.auth import spotify_callback
+
 app.get("/callback")(spotify_callback)
+
 
 @app.get("/")
 async def root():
@@ -122,7 +134,7 @@ async def health_check():
         "status": "healthy",
         "service": "spotify-ai-playlist-generator",
         "version": "1.0.0",
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -130,7 +142,7 @@ async def health_check():
 async def spotify_status():
     """Check Spotify service account status"""
     service_validation = await spotify_service.validate_service_account()
-    
+
     if service_validation["status"] == "valid":
         return {
             "status": "operational",
@@ -138,9 +150,9 @@ async def spotify_status():
                 "id": service_validation["user_id"],
                 "display_name": service_validation["display_name"],
                 "product": service_validation["product"],
-                "country": service_validation["country"]
+                "country": service_validation["country"],
             },
-            "message": "Spotify service account is working correctly"
+            "message": "Spotify service account is working correctly",
         }
     else:
         return {
@@ -151,8 +163,8 @@ async def spotify_status():
                 "Run: python generate_refresh_token.py",
                 "Follow the authorization flow",
                 "Update .env with new SPOTIFY_SERVICE_REFRESH_TOKEN",
-                "Restart the application"
-            ]
+                "Restart the application",
+            ],
         }
 
 
