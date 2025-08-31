@@ -5,6 +5,7 @@ Spotify service for managing the dedicated service account
 import logging
 import base64
 import asyncio
+import time
 from typing import Optional, List, Dict, Any
 import httpx
 import spotipy
@@ -53,6 +54,7 @@ class SpotifyServiceClient:
     def __init__(self):
         self._client: Optional[spotipy.Spotify] = None
         self._access_token: Optional[str] = None
+        self._token_expires_at: Optional[float] = None
         
     async def get_client(self) -> spotipy.Spotify:
         """Get authenticated Spotify client for service account"""
@@ -75,6 +77,7 @@ class SpotifyServiceClient:
                         # Force refresh by clearing current client
                         self._client = None
                         self._access_token = None
+                        self._token_expires_at = None
                         continue
                     else:
                         logger.error(f"Auth failed after {max_retries + 1} attempts")
@@ -86,6 +89,11 @@ class SpotifyServiceClient:
     async def _is_token_valid(self) -> bool:
         """Check if current access token is still valid"""
         if not self._client or not self._access_token:
+            return False
+            
+        # Proactive token refresh - check if token expires within 10 minutes
+        if self._token_expires_at and time.time() >= (self._token_expires_at - 600):
+            logger.info("🔄 Access token expires soon, proactively refreshing...")
             return False
             
         try:
@@ -127,9 +135,14 @@ class SpotifyServiceClient:
                 if not access_token:
                     raise Exception("No access token received from refresh")
                 
-                # Create new Spotify client
+                # Create new Spotify client and track expiration
                 self._access_token = access_token
                 self._client = spotipy.Spotify(auth=access_token)
+                
+                # Track token expiration (Spotify tokens expire in 1 hour = 3600 seconds)
+                expires_in = token_data.get("expires_in", 3600)
+                self._token_expires_at = time.time() + expires_in
+                logger.debug(f"Token will expire at: {time.ctime(self._token_expires_at)}")
                 
                 # Verify client works and validate scopes
                 user_info = self._client.current_user()
@@ -151,6 +164,7 @@ class SpotifyServiceClient:
                     # Clear the invalid client
                     self._client = None
                     self._access_token = None
+                    self._token_expires_at = None
                     raise
                 else:
                     # Exponential backoff for retries
@@ -192,9 +206,10 @@ class SpotifyServiceClient:
                 
                 # Handle specific error cases
                 if response.status_code == 400:
-                    logger.error("Bad request - likely invalid refresh token")
+                    logger.error("❌ Bad request - likely invalid refresh token")
+                    logger.error("💡 SOLUTION: Run 'python generate_refresh_token.py' to get a new refresh token")
                 elif response.status_code == 401:
-                    logger.error("Unauthorized - check client credentials")
+                    logger.error("❌ Unauthorized - check client credentials")
                     
                 raise Exception(f"Failed to refresh access token: {response.status_code}")
             
@@ -208,7 +223,9 @@ class SpotifyServiceClient:
             # Check if we got a new refresh token (optional but good practice)
             new_refresh_token = token_response.get("refresh_token")
             if new_refresh_token:
-                logger.info("Received new refresh token (consider updating your configuration)")
+                logger.warning("🔄 Received new refresh token - you should update your SPOTIFY_SERVICE_REFRESH_TOKEN environment variable")
+                logger.warning(f"New refresh token: {new_refresh_token}")
+                # Note: In production, you'd want to automatically update this in your config store
             
             # Log scope information if available
             scope = token_response.get("scope", "")
