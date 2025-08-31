@@ -7,6 +7,34 @@
   background: var(--color-bg-primary);
   position: relative;
   transition: background-color 0.3s ease;
+  
+  /* CSS custom properties for input area heights */
+  --input-area-height: 96px; /* Default desktop height (padding + input + border) */
+}
+
+/* Define input area heights for different breakpoints */
+@media (max-width: 768px) {
+  .chat-interface {
+    --input-area-height: 88px; /* Tablet input area height */
+  }
+}
+
+@media (max-width: 640px) {
+  .chat-interface {
+    --input-area-height: 84px; /* Small tablet input area height */
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-interface {
+    --input-area-height: 80px; /* Mobile input area height */
+  }
+}
+
+@media (max-width: 380px) {
+  .chat-interface {
+    --input-area-height: 76px; /* Small mobile input area height */
+  }
 }
 
 /* Welcome Container */
@@ -1000,6 +1028,91 @@
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+/* Buy me a coffee button styles */
+.buy-me-coffee-widget {
+  position: absolute;
+  bottom: calc(var(--input-area-height) + 20px); /* Always 20px above input area */
+  right: 20px;
+  z-index: 1000;
+}
+
+.bmc-button {
+  display: block;
+  text-decoration: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bmc-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.bmc-button-image {
+  height: 40px;
+  width: auto;
+  border-radius: 8px;
+  display: block;
+}
+
+/* Ensure it doesn't interfere with scrolling */
+.chat-interface {
+  position: relative;
+}
+
+/* Responsive adjustments for coffee button */
+@media (max-width: 768px) {
+  .buy-me-coffee-widget {
+    bottom: calc(var(--input-area-height) + 18px); /* Slightly closer on tablets */
+    right: 15px;
+  }
+  
+  .bmc-button-image {
+    height: 35px;
+  }
+}
+
+@media (max-width: 640px) {
+  .buy-me-coffee-widget {
+    bottom: calc(var(--input-area-height) + 16px);
+    right: 12px;
+  }
+  
+  .bmc-button-image {
+    height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .buy-me-coffee-widget {
+    bottom: calc(var(--input-area-height) + 14px);
+    right: 10px;
+  }
+  
+  .bmc-button-image {
+    height: 28px;
+  }
+}
+
+@media (max-width: 380px) {
+  .buy-me-coffee-widget {
+    bottom: calc(var(--input-area-height) + 12px);
+    right: 8px;
+  }
+  
+  .bmc-button-image {
+    height: 24px;
+  }
+}
+
+/* Hide the button on very small screens where it might interfere */
+@media (max-width: 320px) {
+  .buy-me-coffee-widget {
+    display: none;
   }
 }
 

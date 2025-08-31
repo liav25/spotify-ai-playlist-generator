@@ -40,6 +40,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
     adjustTextareaHeight();
   }, [inputValue]);
 
+
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
@@ -151,6 +152,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
 
   return (
     <div className="chat-interface" data-testid="chat-interface">
+      {/* Buy me a coffee button - only visible during conversations */}
+      {messages.length > 0 && (
+        <div className="buy-me-coffee-widget">
+          <a 
+            href="https://www.buymeacoffee.com/liav25" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="bmc-button"
+          >
+            <img 
+              src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" 
+              alt="Buy Me A Coffee" 
+              className="bmc-button-image"
+            />
+          </a>
+        </div>
+      )}
       {messages.length === 0 ? (
         // Show welcome state with preset cards when no messages
         <div className="welcome-container">
