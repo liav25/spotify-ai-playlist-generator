@@ -20,7 +20,7 @@ router = APIRouter()
 @router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_request: ChatRequest, request: Request):
     """Chat endpoint that integrates with LangGraph agent using service account"""
-    
+
     logger.info("🚀 Chat request received (no authentication required)")
     logger.debug(f"📝 Message: {chat_request.message}")
     logger.debug(f"🔗 Thread ID: {chat_request.thread_id}")
@@ -56,7 +56,8 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
             "configurable": {
                 "thread_id": thread_id,
                 "spotify_client": spotify_client,
-            }
+            },
+            "recursion_limit": 100,
         }
         logger.debug(f"⚙️  Agent config prepared")
 
@@ -94,24 +95,26 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
         playlist_data = result.get("playlist_data") if result else None
         if playlist_data:
             # Ensure data consistency before creating PlaylistData model
-            tracks = playlist_data.get('tracks', [])
+            tracks = playlist_data.get("tracks", [])
             if not isinstance(tracks, list):
                 tracks = []
-                playlist_data['tracks'] = tracks
-            
+                playlist_data["tracks"] = tracks
+
             # Ensure all required fields are present with proper types
-            playlist_data.setdefault('total_tracks', len(tracks))
-            playlist_data['owner'] = playlist_data.get('owner') or 'Unknown'
-            playlist_data.setdefault('images', [])
-            
+            playlist_data.setdefault("total_tracks", len(tracks))
+            playlist_data["owner"] = playlist_data.get("owner") or "Unknown"
+            playlist_data.setdefault("images", [])
+
             track_count = len(tracks)
             logger.debug(
                 f"🎵 Playlist data found in result: {playlist_data.get('name', 'Unknown')} with {track_count} tracks"
             )
 
         # Log final state for debugging
-        logger.debug(f"📊 Final agent state: user_intent='{result.get('user_intent')}', playlist_id={result.get('playlist_id')}, playlist_name='{result.get('playlist_name')}'")
-        
+        logger.debug(
+            f"📊 Final agent state: user_intent='{result.get('user_intent')}', playlist_id={result.get('playlist_id')}, playlist_name='{result.get('playlist_name')}'"
+        )
+
         logger.info(f"✅ Chat processing completed successfully for thread {thread_id}")
 
         return ChatResponse(
