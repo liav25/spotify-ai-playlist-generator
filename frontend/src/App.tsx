@@ -2,22 +2,10 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import ChatInterface from './ChatInterface'
 import Sidebar from './Sidebar'
-import AnimatedInstructions from './AnimatedInstructions'
 import { ThemeProvider } from './ThemeContext'
 import { PlaylistProvider, usePlaylist } from './PlaylistContext'
 import { chatApi } from './chatApi'
 
-// Get API base URL for auth endpoints
-const getApiBaseUrl = (): string => {
-  const apiUrl = import.meta.env.VITE_API_URL;
-  const isProd = import.meta.env.PROD;
-  
-  if (apiUrl && isProd) {
-    return apiUrl;
-  }
-  // In development, use relative URLs with proxy
-  return '';
-};
 
 interface User {
   id: string
@@ -31,14 +19,12 @@ interface User {
 }
 
 function App() {
-  const [user, setUser] = useState<User | null>({
+  const user: User = {
     id: 'anonymous',
     display_name: 'Anonymous User',
     email: 'anonymous@user.com',
     images: []
-  })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  }
 
   useEffect(() => {
     // Skip authentication - go directly to chat
