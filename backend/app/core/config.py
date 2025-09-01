@@ -35,6 +35,10 @@ class Settings(BaseSettings):
         os.getenv("LANGSMITH_TRACING_ENABLED", "true").lower() == "true"
     )
 
+    # Redis Configuration for token caching
+    redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    redis_enabled: bool = os.getenv("REDIS_ENABLED", "true").lower() == "true"
+
     # Optional: Langfuse observability
     langfuse_public_key: Optional[str] = os.getenv("LANGFUSE_PUBLIC_KEY")
     langfuse_secret_key: Optional[str] = os.getenv("LANGFUSE_SECRET_KEY")

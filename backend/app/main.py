@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
 from .routers import auth, api, chat
 from .services.spotify_service import spotify_service
+from .services.token_manager import spotify_token_manager
 
 # Configure logging
 logging.basicConfig(
@@ -38,6 +39,20 @@ async def lifespan(app: FastAPI):
         # Validate basic configuration
         settings.validate_required_settings()
         logger.info("✅ Configuration validation passed")
+
+        # Initialize and test Redis connection
+        if settings.redis_enabled:
+            logger.info("🔄 Testing Redis connection for token management...")
+            token_health = await spotify_token_manager.health_check()
+            if token_health["status"] == "healthy":
+                if token_health.get("redis_status") == "connected":
+                    logger.info("✅ Redis connection established for token caching")
+                else:
+                    logger.warning("⚠️  Redis unavailable, using direct token refresh fallback")
+            else:
+                logger.error(f"❌ Token manager health check failed: {token_health.get('error')}")
+        else:
+            logger.info("ℹ️  Redis disabled, using direct token refresh")
 
         # Validate Spotify service account
         logger.info("🔄 Validating Spotify service account...")
@@ -166,6 +181,19 @@ async def spotify_status():
                 "Restart the application",
             ],
         }
+
+
+@app.get("/api/token-metrics")
+async def token_metrics():
+    """Get token management metrics for monitoring"""
+    metrics = await spotify_token_manager.get_metrics()
+    health = await spotify_token_manager.health_check()
+    
+    return {
+        "metrics": metrics,
+        "health": health,
+        "message": "Token management system metrics"
+    }
 
 
 if __name__ == "__main__":
