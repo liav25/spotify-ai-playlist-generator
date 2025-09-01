@@ -6,7 +6,7 @@ All operations use the dedicated service account
 import logging
 from fastapi import APIRouter, HTTPException, status
 
-from backend.app.api.models import PlaylistData
+from app.api.models import PlaylistData
 
 from ..services.spotify_service import spotify_service
 
