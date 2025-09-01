@@ -10,7 +10,10 @@ from .models import Track
 # Import LangSmith tracing if available
 try:
     from langsmith import traceable
-    tracing_enabled = os.getenv("LANGSMITH_TRACING_ENABLED", "true").lower() == "true" and os.getenv("LANGSMITH_API_KEY")
+
+    tracing_enabled = os.getenv(
+        "LANGSMITH_TRACING_ENABLED", "true"
+    ).lower() == "true" and os.getenv("LANGSMITH_API_KEY")
     if tracing_enabled:
         print("✅ LangSmith tracing enabled for Spotify tools")
     else:
@@ -177,46 +180,34 @@ def get_track_recommendations(
     limit: int = 20,
     min_acousticness: Optional[float] = None,
     max_acousticness: Optional[float] = None,
-    target_acousticness: Optional[float] = None,
     min_danceability: Optional[float] = None,
     max_danceability: Optional[float] = None,
-    target_danceability: Optional[float] = None,
     min_duration_ms: Optional[int] = None,
     max_duration_ms: Optional[int] = None,
-    target_duration_ms: Optional[int] = None,
     min_energy: Optional[float] = None,
     max_energy: Optional[float] = None,
-    target_energy: Optional[float] = None,
     min_instrumentalness: Optional[float] = None,
     max_instrumentalness: Optional[float] = None,
-    target_instrumentalness: Optional[float] = None,
     min_key: Optional[int] = None,
     max_key: Optional[int] = None,
     target_key: Optional[int] = None,
     min_liveness: Optional[float] = None,
     max_liveness: Optional[float] = None,
-    target_liveness: Optional[float] = None,
     min_loudness: Optional[float] = None,
     max_loudness: Optional[float] = None,
-    target_loudness: Optional[float] = None,
     min_mode: Optional[int] = None,
     max_mode: Optional[int] = None,
-    target_mode: Optional[int] = None,
     min_popularity: Optional[int] = None,
     max_popularity: Optional[int] = None,
     target_popularity: Optional[int] = None,
     min_speechiness: Optional[float] = None,
     max_speechiness: Optional[float] = None,
-    target_speechiness: Optional[float] = None,
     min_tempo: Optional[float] = None,
     max_tempo: Optional[float] = None,
-    target_tempo: Optional[float] = None,
     min_time_signature: Optional[int] = None,
     max_time_signature: Optional[int] = None,
-    target_time_signature: Optional[int] = None,
     min_valence: Optional[float] = None,
     max_valence: Optional[float] = None,
-    target_valence: Optional[float] = None,
 ) -> List[Dict[str, Any]]:
     """Get track recommendations based on seeds and tunable audio features.
 
@@ -228,20 +219,20 @@ def get_track_recommendations(
 
         Audio Feature Parameters (all optional, see Spotify API docs for details):
 
-        min_acousticness, max_acousticness, target_acousticness: float (0.0–1.0).
-        min_danceability, max_danceability, target_danceability: float (0.0–1.0).
+        min_acousticness, max_acousticness: float (0.0–1.0).
+        min_danceability, max_danceability: float (0.0–1.0).
         min_duration_ms, max_duration_ms, target_duration_ms: int (milliseconds).
-        min_energy, max_energy, target_energy: float (0.0–1.0).
+        min_energy, max_energy: float (0.0–1.0).
         min_instrumentalness, max_instrumentalness, target_instrumentalness: float (0.0–1.0).
         min_key, max_key, target_key: int (0–11).
-        min_liveness, max_liveness, target_liveness: float (0.0–1.0).
-        min_loudness, max_loudness, target_loudness: float (decibels).
+        min_liveness, max_liveness: float (0.0–1.0).
+        min_loudness, max_loudness: float (decibels).
         min_mode, max_mode, target_mode: int (0 or 1).
-        min_popularity, max_popularity, target_popularity: int (0–100).
-        min_speechiness, max_speechiness, target_speechiness: float (0.0–1.0).
-        min_tempo, max_tempo, target_tempo: float (BPM).
-        min_time_signature, max_time_signature, target_time_signature: int.
-        min_valence, max_valence, target_valence: float (0.0–1.0).
+        min_popularity, max_popularity: int (0–100).
+        min_speechiness, max_speechiness: float (0.0–1.0).
+        min_tempo, max_tempo : float (BPM).
+        min_time_signature, max_time_signature : int.
+        min_valence, max_valence: float (0.0–1.0).
         config: Configuration containing spotify_client in a 'configurable' dict.
 
     Returns:
@@ -259,40 +250,30 @@ def get_track_recommendations(
             audio_features["min_acousticness"] = min_acousticness
         if max_acousticness is not None:
             audio_features["max_acousticness"] = max_acousticness
-        if target_acousticness is not None:
-            audio_features["target_acousticness"] = target_acousticness
 
         # Danceability
         if min_danceability is not None:
             audio_features["min_danceability"] = min_danceability
         if max_danceability is not None:
             audio_features["max_danceability"] = max_danceability
-        if target_danceability is not None:
-            audio_features["target_danceability"] = target_danceability
 
         # Duration
         if min_duration_ms is not None:
             audio_features["min_duration_ms"] = min_duration_ms
         if max_duration_ms is not None:
             audio_features["max_duration_ms"] = max_duration_ms
-        if target_duration_ms is not None:
-            audio_features["target_duration_ms"] = target_duration_ms
 
         # Energy
         if min_energy is not None:
             audio_features["min_energy"] = min_energy
         if max_energy is not None:
             audio_features["max_energy"] = max_energy
-        if target_energy is not None:
-            audio_features["target_energy"] = target_energy
 
         # Instrumentalness
         if min_instrumentalness is not None:
             audio_features["min_instrumentalness"] = min_instrumentalness
         if max_instrumentalness is not None:
             audio_features["max_instrumentalness"] = max_instrumentalness
-        if target_instrumentalness is not None:
-            audio_features["target_instrumentalness"] = target_instrumentalness
 
         # Key
         if min_key is not None:
@@ -307,24 +288,18 @@ def get_track_recommendations(
             audio_features["min_liveness"] = min_liveness
         if max_liveness is not None:
             audio_features["max_liveness"] = max_liveness
-        if target_liveness is not None:
-            audio_features["target_liveness"] = target_liveness
 
         # Loudness
         if min_loudness is not None:
             audio_features["min_loudness"] = min_loudness
         if max_loudness is not None:
             audio_features["max_loudness"] = max_loudness
-        if target_loudness is not None:
-            audio_features["target_loudness"] = target_loudness
 
         # Mode
         if min_mode is not None:
             audio_features["min_mode"] = min_mode
         if max_mode is not None:
             audio_features["max_mode"] = max_mode
-        if target_mode is not None:
-            audio_features["target_mode"] = target_mode
 
         # Popularity
         if min_popularity is not None:
@@ -339,32 +314,24 @@ def get_track_recommendations(
             audio_features["min_speechiness"] = min_speechiness
         if max_speechiness is not None:
             audio_features["max_speechiness"] = max_speechiness
-        if target_speechiness is not None:
-            audio_features["target_speechiness"] = target_speechiness
 
         # Tempo
         if min_tempo is not None:
             audio_features["min_tempo"] = min_tempo
         if max_tempo is not None:
             audio_features["max_tempo"] = max_tempo
-        if target_tempo is not None:
-            audio_features["target_tempo"] = target_tempo
 
         # Time Signature
         if min_time_signature is not None:
             audio_features["min_time_signature"] = min_time_signature
         if max_time_signature is not None:
             audio_features["max_time_signature"] = max_time_signature
-        if target_time_signature is not None:
-            audio_features["target_time_signature"] = target_time_signature
 
         # Valence
         if min_valence is not None:
             audio_features["min_valence"] = min_valence
         if max_valence is not None:
             audio_features["max_valence"] = max_valence
-        if target_valence is not None:
-            audio_features["target_valence"] = target_valence
 
         spotify_client = config["configurable"].get("spotify_client")
         if not spotify_client:
@@ -441,7 +408,7 @@ def get_user_info(config: RunnableConfig) -> Optional[Dict[str, Any]]:
         if not spotify_client:
             logger.error("Spotify client not found in config")
             return None
-            
+
         user_info = spotify_client.current_user()
         user_data = {
             "id": user_info.get("id"),
@@ -488,14 +455,14 @@ def create_playlist(
         if not spotify_client:
             logger.error("Spotify client not found in config")
             return None
-            
+
         user_info = spotify_client.current_user()
         user_id = user_info["id"]
 
         playlist = spotify_client.user_playlist_create(
             user=user_id, name=name, public=public, description=description
         )
-        
+
         playlist_data = {
             "id": playlist["id"],
             "name": playlist["name"],
@@ -507,7 +474,7 @@ def create_playlist(
             "tracks": [],  # New playlist starts with empty tracks array
             "images": playlist.get("images", []),
         }
-        
+
         logger.info(f"Successfully created playlist '{name}' with ID: {playlist['id']}")
         return playlist_data
     except Exception as e:
@@ -543,7 +510,7 @@ def add_tracks_to_playlist(
         if not spotify_client:
             logger.error("Spotify client not found in config")
             return False
-            
+
         chunk_size = 100
         chunks_processed = 0
         for i in range(0, len(track_uris), chunk_size):
@@ -592,21 +559,21 @@ def get_playlist_tracks(
 
         # Get playlist info
         playlist = spotify_client.playlist(playlist_id)
-        
+
         # Get playlist tracks
         tracks_result = spotify_client.playlist_tracks(playlist_id, limit=limit)
-        
+
         tracks = []
         for item in tracks_result["items"]:
             if item["track"]:  # Check if track exists
                 track = item["track"]
                 album = track.get("album", {})
                 artists = track.get("artists", [])
-                
+
                 # Extract album cover URLs
                 album_images = album.get("images", [])
                 album_cover = album_images[0]["url"] if album_images else None
-                
+
                 track_data = {
                     "id": track["id"],
                     "name": track["name"],
@@ -632,12 +599,95 @@ def get_playlist_tracks(
             "tracks": tracks,
             "images": playlist.get("images") or [],
         }
-        
-        logger.info(f"Successfully retrieved {len(tracks)} tracks from playlist {playlist_id}")
+
+        logger.info(
+            f"Successfully retrieved {len(tracks)} tracks from playlist {playlist_id}"
+        )
         return playlist_data
     except Exception as e:
         logger.error(f"Error getting playlist tracks for {playlist_id}: {e}")
         return {}
+
+
+@tool(
+    description="Remove tracks from an existing Spotify playlist using the spotipy client",
+    parse_docstring=True,
+)
+def remove_tracks_from_playlist(
+    config: RunnableConfig,
+    playlist_id: str,
+    track_uris: List[str],
+) -> bool:
+    """Remove tracks from an existing Spotify playlist.
+
+    Args:
+        config: Configuration containing spotify_client in a 'configurable' dict.
+        playlist_id: Playlist ID to remove tracks from.
+        track_uris: List of track URIs to remove from the playlist.
+
+    Returns:
+        True if tracks were removed successfully, False otherwise.
+    """
+    logger.info(f"Removing {len(track_uris)} tracks from playlist {playlist_id}")
+    try:
+        spotify_client = (
+            config["configurable"].get("spotify_client") if config else None
+        )
+        if not spotify_client:
+            logger.error("Spotify client not found in config")
+            return False
+
+        tracks_to_remove = [{"uri": uri} for uri in track_uris]
+        spotify_client.playlist_remove_all_occurrences_of_items(
+            playlist_id, [t["uri"] for t in tracks_to_remove]
+        )
+        logger.info(
+            f"Successfully removed {len(track_uris)} tracks from playlist {playlist_id}"
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Error removing tracks from playlist {playlist_id}: {e}")
+        return False
+
+
+@tool(
+    description="Retrieve detailed audio features for a Spotify track using the spotipy client",
+    parse_docstring=True,
+)
+def get_audio_features(
+    config: RunnableConfig,
+    track_id: str,
+) -> Optional[Dict[str, Any]]:
+    """Get audio features for a Spotify track.
+
+    Args:
+        config: Configuration containing spotify_client in a 'configurable' dict.
+        track_id: The Spotify track ID.
+
+    Returns:
+        Dictionary containing audio features data (e.g., acousticness, danceability, energy, etc.),
+        or None if failed.
+    """
+    logger.info(f"Getting audio features for track {track_id}")
+    try:
+        spotify_client = (
+            config["configurable"].get("spotify_client") if config else None
+        )
+        if not spotify_client:
+            logger.error("Spotify client not found in config")
+            return None
+
+        features = spotify_client.audio_features([track_id])
+        if not features or not features[0]:
+            logger.error(f"No audio features found for track {track_id}")
+            return None
+
+        audio_features = features[0]
+        logger.info(f"Retrieved audio features for track {track_id}")
+        return audio_features
+    except Exception as e:
+        logger.error(f"Error getting audio features for track {track_id}: {e}")
+        return None
 
 
 # Export all tools for the agent
@@ -651,4 +701,6 @@ tools = [
     create_playlist,
     add_tracks_to_playlist,
     get_playlist_tracks,
+    remove_tracks_from_playlist,
+    get_audio_features,
 ]
