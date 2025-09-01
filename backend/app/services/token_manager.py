@@ -261,8 +261,14 @@ class SpotifyTokenManager:
             # Handle new refresh token if provided
             new_refresh_token = token_response.get("refresh_token")
             if new_refresh_token:
-                logger.warning("🔄 Received new refresh token - update your SPOTIFY_SERVICE_REFRESH_TOKEN")
-                logger.warning(f"New refresh token: {new_refresh_token}")
+                logger.info("🔄 Received new refresh token from Spotify")
+                try:
+                    await self._auto_update_refresh_token(new_refresh_token)
+                    logger.info("✅ Refresh token automatically updated in .env file")
+                except Exception as e:
+                    logger.error(f"❌ Failed to auto-update refresh token: {e}")
+                    logger.warning("🔄 Manual update required:")
+                    logger.warning(f"New refresh token: {new_refresh_token}")
             
             return token_response
     
@@ -328,6 +334,38 @@ class SpotifyTokenManager:
             logger.error(f"Failed to get metrics: {e}")
             return {"error": str(e)}
     
+    async def _auto_update_refresh_token(self, new_refresh_token: str):
+        """Automatically update the refresh token in .env file"""
+        import os
+        
+        env_path = ".env"
+        if not os.path.exists(env_path):
+            raise FileNotFoundError("No .env file found")
+        
+        # Read current .env content
+        with open(env_path, 'r') as f:
+            env_lines = f.readlines()
+        
+        # Update the refresh token line
+        token_updated = False
+        for i, line in enumerate(env_lines):
+            if line.startswith("SPOTIFY_SERVICE_REFRESH_TOKEN="):
+                env_lines[i] = f"SPOTIFY_SERVICE_REFRESH_TOKEN={new_refresh_token}\n"
+                token_updated = True
+                break
+        
+        # Add token if not found
+        if not token_updated:
+            env_lines.append(f"SPOTIFY_SERVICE_REFRESH_TOKEN={new_refresh_token}\n")
+        
+        # Write back to file
+        with open(env_path, 'w') as f:
+            f.writelines(env_lines)
+        
+        # Update the settings object in memory (requires restart to fully take effect)
+        from ..core.config import settings
+        settings.spotify_service_refresh_token = new_refresh_token
+
     async def health_check(self) -> Dict[str, Any]:
         """Health check for token management system."""
         try:

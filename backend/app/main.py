@@ -54,32 +54,42 @@ async def lifespan(app: FastAPI):
         else:
             logger.info("ℹ️  Redis disabled, using direct token refresh")
 
-        # Validate Spotify service account
-        logger.info("🔄 Validating Spotify service account...")
-        service_validation = await spotify_service.validate_service_account()
-
-        if service_validation["status"] == "valid":
-            user_info = service_validation
-            logger.info(
-                f"✅ Spotify service account validated: {user_info['display_name']} ({user_info['user_id']})"
-            )
-            logger.info(
-                f"📊 Account details: {user_info['product']} subscription, {user_info['followers']} followers"
-            )
-        else:
-            logger.error(
-                f"❌ Spotify service account validation failed: {service_validation['error']}"
-            )
+        # Proactively refresh and validate Spotify service account
+        logger.info("🔄 Proactively refreshing and validating Spotify service account...")
+        
+        try:
+            # Force a token refresh on startup to handle any token issues immediately
+            logger.info("🔄 Refreshing access token proactively...")
+            await spotify_token_manager.get_valid_token()  # This will refresh if needed
+            
+            # Now validate the service account
+            service_validation = await spotify_service.validate_service_account()
+            
+            if service_validation["status"] == "valid":
+                user_info = service_validation
+                logger.info(
+                    f"✅ Spotify service account validated: {user_info['display_name']} ({user_info['user_id']})"
+                )
+                logger.info(
+                    f"📊 Account details: {user_info['product']} subscription, {user_info['followers']} followers"
+                )
+                logger.info("🎯 Service account ready for 24/7 operation!")
+            else:
+                logger.error(
+                    f"❌ Spotify service account validation failed: {service_validation['error']}"
+                )
+                raise Exception(f"Service account validation failed: {service_validation['error']}")
+                
+        except Exception as e:
+            logger.error(f"❌ Spotify service account setup failed: {e}")
             logger.error("🔧 To fix this issue:")
-            logger.error("   1. Run: python generate_refresh_token.py")
-            logger.error("   2. Follow the instructions to get a new refresh token")
-            logger.error(
-                "   3. Update your .env file with the new SPOTIFY_SERVICE_REFRESH_TOKEN"
-            )
-            logger.error("   4. Restart the application")
-
-            # Don't fail startup, but warn about limited functionality
+            logger.error("   1. Visit: http://127.0.0.1:8000/auth/setup")
+            logger.error("   2. Complete the one-time OAuth setup")
+            logger.error("   3. Restart the application")
+            
+            # Don't fail startup completely, but log the setup URL
             logger.warning("⚠️  Application started with limited Spotify functionality")
+            logger.warning(f"🔗 Setup URL: http://127.0.0.1:8000/auth/setup")
 
         logger.info("🚀 Application started successfully")
 
@@ -126,14 +136,14 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(auth.router, prefix="/auth", tags=["authentication"])
+app.include_router(auth.router, prefix="/auth", tags=["service-account"])
 app.include_router(api.router, prefix="/api", tags=["api"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 
-# Include callback route at root level for Spotify OAuth
-from .routers.auth import spotify_callback
+# Include OAuth callback for one-time setup
+from .routers.auth import oauth_callback
 
-app.get("/callback")(spotify_callback)
+app.get("/auth/callback")(oauth_callback)
 
 
 @app.get("/")

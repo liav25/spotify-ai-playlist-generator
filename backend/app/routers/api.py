@@ -1,57 +1,46 @@
 """
-API router for user and playlist endpoints
+Simplified API router - Service Account Mode
+All operations use the dedicated service account
 """
 
 import logging
-import spotipy
-from fastapi import APIRouter, HTTPException, status, Request
+from fastapi import APIRouter, HTTPException, status
 
-from ..api.models import User, PlaylistData
-from ..services.auth_service import get_current_user_from_header
-from ..services.user_service import user_sessions
+from ..api.models import PlaylistData
+from ..services.spotify_service import spotify_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
-@router.get("/user", response_model=User)
-async def get_user(request: Request):
-    """Get current user information"""
-    current_user = await get_current_user_from_header(request)
-    if not current_user:
+@router.get("/service-user")
+async def get_service_user():
+    """Get service account user information"""
+    service_validation = await spotify_service.validate_service_account()
+    
+    if service_validation["status"] == "valid":
+        return {
+            "id": service_validation["user_id"],
+            "display_name": service_validation["display_name"],
+            "email": service_validation.get("email"),
+            "country": service_validation.get("country"),
+            "product": service_validation["product"],
+            "followers": service_validation.get("followers", 0)
+        }
+    else:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service account not available"
         )
-    return current_user
 
 
 @router.get("/playlist/{playlist_id}", response_model=PlaylistData)
-async def get_playlist(playlist_id: str, request: Request):
-    """Get playlist information with tracks and album covers"""
-    current_user = await get_current_user_from_header(request)
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
-        )
-
+async def get_playlist(playlist_id: str):
+    """Get playlist information using service account"""
     try:
-        # Get user session to retrieve Spotify token
-        user_session = user_sessions.get(current_user.id)
-        if not user_session:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Session not found"
-            )
-
-        spotify_token = user_session.get("spotify_token")
-        if not spotify_token:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Spotify token not available",
-            )
-
-        # Create Spotify client with user's token
-        spotify_client = spotipy.Spotify(auth=spotify_token)
+        # Use service account client
+        spotify_client = await spotify_service.get_client_with_retry()
 
         # Use the get_playlist_tracks tool
         from ..langgraph.tools import get_playlist_tracks

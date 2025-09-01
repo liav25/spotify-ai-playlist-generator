@@ -1,26 +1,12 @@
 """
-Authentication service for user session management
+Authentication service - Service Account Mode
+No individual user authentication required
 """
 
-from typing import Optional
-from fastapi import Request
-
-from ..api.models import User
-from .user_service import user_sessions
+from ..services.spotify_service import spotify_service
 
 
-async def get_current_user_from_header(request: Request) -> Optional[User]:
-    """Get current user from Authorization header"""
-    authorization = request.headers.get("Authorization")
-    if not authorization or not authorization.startswith("Bearer "):
-        return None
-
-    # Extract the token (this would be the Spotify access token from frontend)
-    token = authorization.replace("Bearer ", "")
-
-    # Find user session by looking for matching token
-    for session_data in user_sessions.values():
-        if session_data.get("frontend_token") == token:
-            return session_data["user"]
-
-    return None
+async def get_service_account_info():
+    """Get service account information"""
+    service_validation = await spotify_service.validate_service_account()
+    return service_validation
