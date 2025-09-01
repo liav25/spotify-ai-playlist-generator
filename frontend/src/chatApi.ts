@@ -47,22 +47,25 @@ export class ChatApi {
 
   async sendMessage(content: string): Promise<{ message: ChatMessage; playlistData?: PlaylistData }> {
     const token = this.getAuthToken();
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-
+    
     const request: ChatRequest = {
       message: content,
       thread_id: this.threadId || undefined
     };
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+    
+    // Only add Authorization header if token exists (for optional user auth)
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     try {
       const response = await fetch(`${this.apiBaseUrl}/api/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers,
         body: JSON.stringify(request)
       });
 
