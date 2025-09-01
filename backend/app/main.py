@@ -48,23 +48,29 @@ async def lifespan(app: FastAPI):
                 if token_health.get("redis_status") == "connected":
                     logger.info("✅ Redis connection established for token caching")
                 else:
-                    logger.warning("⚠️  Redis unavailable, using direct token refresh fallback")
+                    logger.warning(
+                        "⚠️  Redis unavailable, using direct token refresh fallback"
+                    )
             else:
-                logger.error(f"❌ Token manager health check failed: {token_health.get('error')}")
+                logger.error(
+                    f"❌ Token manager health check failed: {token_health.get('error')}"
+                )
         else:
             logger.info("ℹ️  Redis disabled, using direct token refresh")
 
         # Proactively refresh and validate Spotify service account
-        logger.info("🔄 Proactively refreshing and validating Spotify service account...")
-        
+        logger.info(
+            "🔄 Proactively refreshing and validating Spotify service account..."
+        )
+
         try:
             # Force a token refresh on startup to handle any token issues immediately
             logger.info("🔄 Refreshing access token proactively...")
             await spotify_token_manager.get_valid_token()  # This will refresh if needed
-            
+
             # Now validate the service account
             service_validation = await spotify_service.validate_service_account()
-            
+
             if service_validation["status"] == "valid":
                 user_info = service_validation
                 logger.info(
@@ -78,15 +84,17 @@ async def lifespan(app: FastAPI):
                 logger.error(
                     f"❌ Spotify service account validation failed: {service_validation['error']}"
                 )
-                raise Exception(f"Service account validation failed: {service_validation['error']}")
-                
+                raise Exception(
+                    f"Service account validation failed: {service_validation['error']}"
+                )
+
         except Exception as e:
             logger.error(f"❌ Spotify service account setup failed: {e}")
             logger.error("🔧 To fix this issue:")
             logger.error("   1. Visit: http://127.0.0.1:8000/auth/setup")
             logger.error("   2. Complete the one-time OAuth setup")
             logger.error("   3. Restart the application")
-            
+
             # Don't fail startup completely, but log the setup URL
             logger.warning("⚠️  Application started with limited Spotify functionality")
             logger.warning(f"🔗 Setup URL: http://127.0.0.1:8000/auth/setup")
@@ -136,14 +144,14 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(auth.router, prefix="/auth", tags=["service-account"])
+app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(api.router, prefix="/api", tags=["api"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 
-# Include OAuth callback for one-time setup
-from .routers.auth import oauth_callback
+# Include OAuth callback for user authentication
+from .routers.auth import spotify_callback
 
-app.get("/auth/callback")(oauth_callback)
+app.get("/callback")(spotify_callback)
 
 
 @app.get("/")
@@ -198,11 +206,11 @@ async def token_metrics():
     """Get token management metrics for monitoring"""
     metrics = await spotify_token_manager.get_metrics()
     health = await spotify_token_manager.health_check()
-    
+
     return {
         "metrics": metrics,
         "health": health,
-        "message": "Token management system metrics"
+        "message": "Token management system metrics",
     }
 
 

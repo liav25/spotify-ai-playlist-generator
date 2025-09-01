@@ -11,9 +11,11 @@ class Settings(BaseSettings):
     # Spotify App Configuration (for service account only)
     spotify_client_id: Optional[str] = os.getenv("SPOTIFY_CLIENT_ID")
     spotify_client_secret: Optional[str] = os.getenv("SPOTIFY_CLIENT_SECRET")
-    
+
     # Service Account Configuration (Your Dedicated Account)
-    spotify_service_refresh_token: Optional[str] = os.getenv("SPOTIFY_SERVICE_REFRESH_TOKEN")
+    spotify_service_refresh_token: Optional[str] = os.getenv(
+        "SPOTIFY_SERVICE_REFRESH_TOKEN"
+    )
     spotify_service_user_id: Optional[str] = os.getenv("SPOTIFY_SERVICE_USER_ID")
 
     # Application Configuration
@@ -41,13 +43,15 @@ class Settings(BaseSettings):
     langfuse_secret_key: Optional[str] = os.getenv("LANGFUSE_SECRET_KEY")
     langfuse_host: str = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
 
-    # Spotify API URLs  
+    # Spotify OAuth Configuration
+    spotify_redirect_uri: str = os.getenv(
+        "SPOTIFY_REDIRECT_URI", "http://127.0.0.1:8000/callback"
+    )
+
+    # Spotify API URLs
+    spotify_auth_url: str = "https://accounts.spotify.com/authorize"
     spotify_token_url: str = "https://accounts.spotify.com/api/token"
-    
-    # OAuth redirect URI (for one-time setup only)
-    @property
-    def spotify_redirect_uri(self) -> str:
-        return f"{self.backend_url}/auth/callback"
+    spotify_user_url: str = "https://api.spotify.com/v1/me"
 
     class Config:
         case_sensitive = False
