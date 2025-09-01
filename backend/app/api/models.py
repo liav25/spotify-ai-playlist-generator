@@ -36,5 +36,3 @@ class ChatResponse(BaseModel):
     message: str
     thread_id: str
     playlist_data: Optional[PlaylistData] = None
-
-
