@@ -67,7 +67,7 @@ class SpotifyServiceClient:
 
         # Manually provide the refresh token on startup (for Spotipy 2.23+)
         token_info = {
-            "refresh_token": os.environ["SPOTIPY_REFRESH_TOKEN"],
+            "refresh_token": os.environ["SPOTIFY_REFRESH_TOKEN"],
             "scope": "user-read-email user-library-read playlist-modify-private playlist-modify-public",
             "expires_at": 0,  # Forces refresh on first use
         }
