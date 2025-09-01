@@ -43,14 +43,16 @@ class SpotifyServiceClient:
 
     def __init__(self):
         self._client: Optional[spotipy.Spotify] = None
+        self._current_token: Optional[str] = None
 
     async def get_client(self) -> spotipy.Spotify:
         """Get authenticated Spotify client for service account"""
         access_token = await spotify_token_manager.get_valid_token()
         
         # Create new client if needed or token changed
-        if not self._client or self._client.auth != access_token:
+        if not self._client or self._current_token != access_token:
             self._client = spotipy.Spotify(auth=access_token)
+            self._current_token = access_token
             logger.debug("Created Spotify client with refreshed token")
         
         return self._client
