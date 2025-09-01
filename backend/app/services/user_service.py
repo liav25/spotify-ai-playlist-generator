@@ -1,7 +1,7 @@
 """
-User service - Service Account Mode
-No user sessions needed - all operations use service account
+User service for session management
+In production, this should be replaced with a proper database or Redis store
 """
 
-# Note: This file is kept for compatibility but no longer used
-# All operations now use the service account directly
+# In-memory storage for demo (use database in production)
+user_sessions = {}
