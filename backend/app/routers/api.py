@@ -6,7 +6,6 @@ All operations use the dedicated service account
 import logging
 from fastapi import APIRouter, HTTPException, status
 
-from ..api.models import PlaylistData
 from ..services.spotify_service import spotify_service
 
 logger = logging.getLogger(__name__)
@@ -18,7 +17,7 @@ router = APIRouter()
 async def get_service_user():
     """Get service account user information"""
     service_validation = await spotify_service.validate_service_account()
-    
+
     if service_validation["status"] == "valid":
         return {
             "id": service_validation["user_id"],
@@ -26,12 +25,12 @@ async def get_service_user():
             "email": service_validation.get("email"),
             "country": service_validation.get("country"),
             "product": service_validation["product"],
-            "followers": service_validation.get("followers", 0)
+            "followers": service_validation.get("followers", 0),
         }
     else:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Service account not available"
+            detail="Service account not available",
         )
 
 

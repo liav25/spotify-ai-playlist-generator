@@ -38,20 +38,9 @@ class Settings(BaseSettings):
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     redis_enabled: bool = os.getenv("REDIS_ENABLED", "true").lower() == "true"
 
-    # Optional: Langfuse observability
-    langfuse_public_key: Optional[str] = os.getenv("LANGFUSE_PUBLIC_KEY")
-    langfuse_secret_key: Optional[str] = os.getenv("LANGFUSE_SECRET_KEY")
-    langfuse_host: str = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
-
-    # Spotify OAuth Configuration
-    spotify_redirect_uri: str = os.getenv(
-        "SPOTIFY_REDIRECT_URI", "http://127.0.0.1:8000/callback"
-    )
 
     # Spotify API URLs
-    spotify_auth_url: str = "https://accounts.spotify.com/authorize"
     spotify_token_url: str = "https://accounts.spotify.com/api/token"
-    spotify_user_url: str = "https://api.spotify.com/v1/me"
 
     class Config:
         case_sensitive = False

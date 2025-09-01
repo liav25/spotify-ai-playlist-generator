@@ -38,16 +38,3 @@ class ChatResponse(BaseModel):
     playlist_data: Optional[PlaylistData] = None
 
 
-class User(BaseModel):
-    id: str
-    display_name: str
-    email: Optional[str] = None
-    images: Optional[list] = None
-
-
-class SpotifyTokenResponse(BaseModel):
-    access_token: str
-    token_type: str
-    expires_in: int
-    refresh_token: Optional[str] = None
-    scope: str

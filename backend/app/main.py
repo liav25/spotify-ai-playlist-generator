@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import settings
-from .routers import auth, api, chat
+from .routers import api, chat
 from .services.spotify_service import spotify_service
 from .services.token_manager import spotify_token_manager
 
@@ -91,13 +91,14 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.error(f"❌ Spotify service account setup failed: {e}")
             logger.error("🔧 To fix this issue:")
-            logger.error("   1. Visit: http://127.0.0.1:8000/auth/setup")
-            logger.error("   2. Complete the one-time OAuth setup")
-            logger.error("   3. Restart the application")
+            logger.error("   1. Run: python generate_refresh_token.py")
+            logger.error("   2. Complete the OAuth authorization flow")
+            logger.error("   3. Update .env with the new SPOTIFY_SERVICE_REFRESH_TOKEN")
+            logger.error("   4. Restart the application")
 
             # Don't fail startup completely, but log the setup URL
             logger.warning("⚠️  Application started with limited Spotify functionality")
-            logger.warning(f"🔗 Setup URL: http://127.0.0.1:8000/auth/setup")
+            logger.warning("🔧 Run: python generate_refresh_token.py")
 
         logger.info("🚀 Application started successfully")
 
@@ -144,14 +145,9 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(api.router, prefix="/api", tags=["api"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 
-# Include OAuth callback for user authentication
-from .routers.auth import spotify_callback
-
-app.get("/callback")(spotify_callback)
 
 
 @app.get("/")
