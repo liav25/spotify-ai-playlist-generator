@@ -5,6 +5,7 @@ Chat router for LangGraph agent integration
 import uuid
 import logging
 import spotipy
+import os
 from fastapi import APIRouter, HTTPException, status, Request
 from langchain_core.messages import HumanMessage
 
@@ -25,19 +26,9 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
     logger.debug(f"📝 Message: {chat_request.message}")
     logger.debug(f"🔗 Thread ID: {chat_request.thread_id}")
 
-    try:
-        # Get service account Spotify client with retry on auth failures
-        logger.debug("🔍 Getting service account Spotify client")
-        try:
-            spotify_client = await spotify_service.get_client_with_retry()
-            logger.debug("✅ Service account Spotify client obtained and verified")
-        except Exception as e:
-            logger.error(f"❌ Service account Spotify client failed: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Service account Spotify authentication failed",
-            )
+    spotify_client = await spotify_service.get_client()
 
+    try:
         # Generate thread_id if not provided
         thread_id = chat_request.thread_id or str(uuid.uuid4())
         logger.info(f"🧵 Using thread ID: {thread_id}")
