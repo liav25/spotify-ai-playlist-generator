@@ -100,10 +100,54 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
     }
   };
 
-  const handlePresetClick = (description: string) => {
-    setInputValue(description);
-    if (textareaRef.current) {
-      textareaRef.current.focus();
+  const handlePresetClick = async (description: string) => {
+    if (isLoading) return;
+
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: description,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      const response = await chatApi.sendMessage(description);
+      setMessages(prev => [...prev, response.message]);
+      
+      // Update playlist if provided
+      if (response.playlistData) {
+        setCurrentPlaylist(response.playlistData);
+        
+        // If this is a newly created playlist with no tracks, 
+        // fetch the updated playlist data after a short delay to get any tracks that were added
+        if (response.playlistData.tracks.length === 0) {
+          setTimeout(async () => {
+            try {
+              const updatedPlaylist = await chatApi.fetchPlaylist(response.playlistData!.id);
+              if (updatedPlaylist && updatedPlaylist.tracks.length > 0) {
+                setCurrentPlaylist(updatedPlaylist);
+              }
+            } catch (error) {
+              console.warn('Failed to fetch updated playlist:', error);
+            }
+          }, 2000); // Wait 2 seconds for tracks to be added
+        }
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      
+      const errorMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: `I'm sorry, I encountered an error while processing your request. ${error instanceof Error ? error.message : 'Please try again or check your connection.'}`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -133,6 +177,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
 
 
   const presetOptions = [
+    {
+      title: "What can you do?",
+      icon: "❓",
+      description: "What can you do?"
+    },
     {
       title: "Create a workout playlist",
       icon: "🏃",
@@ -185,7 +234,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
               <h3>How it works:</h3>
               <ol className="steps-list">
                 <li>Tell me your mood, genre, or activity</li>
-                <li>I'll curate the perfect playlist</li>
+                <li>I'll create the perfect playlist for you!</li>
                 <li>Your playlist gets created on Spotify</li>
               </ol>
               <p className="call-to-action">Ready to discover your next favorite playlist? <strong>Start chatting below!</strong></p>
@@ -312,7 +361,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
           {isLoading && (
             <div className="message assistant-message typing-indicator">
               <div className="message-bubble">
-                <span>Thinking</span>
+                <span>Thinking... This will take only 1 minute...</span>
                 <div className="typing-dots">
                   <span></span>
                   <span></span>
@@ -334,7 +383,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
             className="message-input"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="Tell me what kind of playlist you want..."
             disabled={isLoading}
             rows={1}
