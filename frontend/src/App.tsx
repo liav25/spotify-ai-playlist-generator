@@ -62,11 +62,12 @@ function AppContent({ user }: { user: User }) {
         <button 
           className="mobile-menu-btn" 
           onClick={toggleMobileSidebar}
-          aria-label="Open menu"
+          aria-label="Show me playlists"
         >
-          <svg viewBox="0 0 24 24" fill="currentColor" className="hamburger-icon">
-            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+          <svg viewBox="0 0 24 24" fill="currentColor" className="playlist-icon">
+            <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>
           </svg>
+          <span className="mobile-menu-text">Show me!</span>
         </button>
         
         <div className="mobile-header-center">
