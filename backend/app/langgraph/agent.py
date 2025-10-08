@@ -313,7 +313,7 @@ Remember: You're not just adding random tracks - you're a skilled curator crafti
         messages = state["messages"]
 
     logger.debug(f"🤖 Initializing ChatOpenAI model")
-    model = ChatOpenAI(model=settings.openai_model)
+    model = ChatOpenAI(model=settings.openai_model, reasoning_effort="low")
     logger.debug(f"🤖 Binding tools to model")
     model_with_tools = model.bind_tools(get_tool_defs(config))
     logger.debug(f"🤖 Calling model with {len(messages)} messages")
