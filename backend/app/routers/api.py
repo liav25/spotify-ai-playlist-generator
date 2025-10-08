@@ -1,6 +1,6 @@
 """
-Simplified API router - Service Account Mode
-All operations use the dedicated service account
+API router using service account
+All operations use your dedicated Spotify service account
 """
 
 import logging
@@ -32,21 +32,20 @@ async def get_service_user():
     else:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Service account not available",
+            detail="Service account not available. Please complete setup first.",
         )
 
 
 @router.get("/playlist/{playlist_id}", response_model=PlaylistData)
-async def get_playlist(playlist_id: str):
+async def get_playlist(playlist_id: str, config):
     """Get playlist information using service account"""
     try:
         # Use service account client
-        spotify_client = await spotify_service.get_client_with_retry()
 
         # Use the get_playlist_tracks tool
         from ..langgraph.tools import get_playlist_tracks
 
-        config = {"configurable": {"spotify_client": spotify_client}}
+        config = {"configurable": {"spotify_client": spotify_service}}
 
         playlist_data = get_playlist_tracks.invoke(
             {"playlist_id": playlist_id, "limit": 100}, config

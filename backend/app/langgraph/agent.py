@@ -15,6 +15,7 @@ from pydantic import BaseModel
 
 from .tools import tools
 from .state import AgentState
+from ..core.config import settings
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -160,6 +161,7 @@ You have access to Spotify tools to fulfill playlist requests:
 - `add_tracks_to_playlist`: Add tracks to an existing playlist using track URIs
 - `remove_tracks_from_playlist`: Remove tracks from a playlist using track URIs,
 - `get_audio_features`: Get detailed audio analysis for a track, including tempo, key, acousticness, dadanceability, etc.
+- `tavily_search`: Search the web for music history, cultural context, trends, and artist information not available in Spotify
 
 # ReAct METHODOLOGY:
 Use the Reason-Act-Observe pattern:
@@ -184,12 +186,31 @@ DO NOT SKIP OBSERVE - IT IS CRITICAL TO THE WORKFLOW. IF NEEDED, REMOVE SOME TRA
 
 # WORKFLOW:
 1. **Understand**: Analyze the user's request for mood, genre, occasion, energy level, specific artists, etc.
-2. **Gather**: Use different tools to find tracks that match the criteria
-3. **Create**: Initialize a playlist using `create_playlist`
-6. **Populate**: **MANDATORY** - Use `add_tracks_to_playlist` to add all selected tracks to the playlist
-7. **Retrieve**: Use `get_playlist_tracks` to fetch the final playlist with all tracks and metadata
-8. **Present**: Provide a PROMINENT, BOLD Spotify link for the playlist that users can't miss. The link must be at the both at the beginning and the end of your message.
-9. **Summarize**: Explain your choices and playlist characteristics. You summary must be short and concise.
+2. **Research** (if needed): Use `tavily_search` for context not available in Spotify (historical periods, cultural movements, time-based queries)
+3. **Gather**: Use different tools to find tracks that match the criteria
+4. **Create**: Initialize a playlist using `create_playlist`
+5. **Populate**: **MANDATORY** - Use `add_tracks_to_playlist` to add all selected tracks to the playlist
+6. **Retrieve**: Use `get_playlist_tracks` to fetch the final playlist with all tracks and metadata
+7. **Present**: Provide a PROMINENT, BOLD Spotify link for the playlist that users can't miss. The link must be at the both at the beginning and the end of your message.
+8. **Summarize**: Explain your choices and playlist characteristics. You summary must be short and concise.
+
+## WEB SEARCH USAGE:
+Use `tavily_search` for contextual research when:
+- User mentions historical periods ("songs from the 90s grunge era", "music when Obama was elected")
+- Cultural or artistic movements ("Harlem Renaissance music", "French New Wave soundtracks")
+- Genre origins and evolution ("history of trip-hop")
+- Emerging/indie artists not well-indexed in Spotify
+- Time-based context ("popular songs during the Berlin Wall fall")
+- Understanding vague requests that require world knowledge
+
+DO NOT use `tavily_search` for:
+- Finding specific tracks (use `search_tracks`)
+- Getting recommendations (use `get_track_recommendations`)
+- Artist catalogs (use `get_artist_top_tracks`)
+- Audio feature analysis (use `get_audio_features`)
+- If user provides specific artists, songs, or genres, or wants a common playlist type by genere, mood, or activity
+
+Strategy: First use web search to understand the context, THEN use Spotify tools to find the actual music.
 
 CRITICAL STEPS:
 1. First find tracks and get their URIs
@@ -292,7 +313,7 @@ Remember: You're not just adding random tracks - you're a skilled curator crafti
         messages = state["messages"]
 
     logger.debug(f"🤖 Initializing ChatOpenAI model")
-    model = ChatOpenAI(model="gpt-4.1")
+    model = ChatOpenAI(model=settings.openai_model)
     logger.debug(f"🤖 Binding tools to model")
     model_with_tools = model.bind_tools(get_tool_defs(config))
     logger.debug(f"🤖 Calling model with {len(messages)} messages")
@@ -310,6 +331,16 @@ async def run_tools(input, config, **kwargs):
 
     logger = logging.getLogger(__name__)
     logger.debug(f"🔧 run_tools called with input keys: {list(input.keys())}")
+
+    # Initialize caches in config if not present
+    if "search_cache" not in config.get("configurable", {}):
+        config.setdefault("configurable", {})["search_cache"] = input.get(
+            "search_cache", {}
+        )
+    if "track_cache" not in config.get("configurable", {}):
+        config["configurable"]["track_cache"] = input.get("track_cache", {})
+    if "artist_cache" not in config.get("configurable", {}):
+        config["configurable"]["artist_cache"] = input.get("artist_cache", {})
 
     # Extract tool information for tracing
     tool_calls = []
@@ -354,6 +385,91 @@ async def run_tools(input, config, **kwargs):
                 if playlist_data.get("name") and not input.get("playlist_name"):
                     updates["playlist_name"] = playlist_data["name"]
                     logger.info(f"🎵 Extracted playlist_name: {playlist_data['name']}")
+
+    # Update caches from tool execution
+    # Populate cache from tool calls if they were executed
+    if tool_calls:
+        for tool_call in tool_calls:
+            tool_name = tool_call.get("name")
+            args = tool_call.get("args", {})
+
+            # Cache tavily_search results
+            if tool_name == "tavily_search" and result.get("messages"):
+                query = args.get("query")
+                if query:
+                    # Find the tool message response
+                    for msg in reversed(result["messages"]):
+                        if hasattr(msg, "content") and isinstance(msg.content, str):
+                            if not config["configurable"]["search_cache"].get(query):
+                                config["configurable"]["search_cache"][
+                                    query
+                                ] = msg.content
+                                logger.info(
+                                    f"💾 Cached Tavily search result for: '{query}'"
+                                )
+                            break
+
+            # Cache search_tracks results
+            elif tool_name == "search_tracks" and result.get("messages"):
+                query = args.get("query")
+                limit = args.get("limit", 20)
+                market = args.get("market", "US")
+                cache_key = f"{query}_{limit}_{market}"
+                if query:
+                    for msg in reversed(result["messages"]):
+                        if hasattr(msg, "content"):
+                            try:
+                                content = (
+                                    json.loads(msg.content)
+                                    if isinstance(msg.content, str)
+                                    else msg.content
+                                )
+                                if isinstance(content, list) and len(content) > 0:
+                                    if not config["configurable"]["track_cache"].get(
+                                        cache_key
+                                    ):
+                                        config["configurable"]["track_cache"][
+                                            cache_key
+                                        ] = content
+                                        logger.info(
+                                            f"💾 Cached track search result for: '{query}'"
+                                        )
+                                    break
+                            except:
+                                pass
+
+            # Cache search_artists results
+            elif tool_name == "search_artists" and result.get("messages"):
+                query = args.get("query")
+                limit = args.get("limit", 10)
+                cache_key = f"{query}_{limit}"
+                if query:
+                    for msg in reversed(result["messages"]):
+                        if hasattr(msg, "content"):
+                            try:
+                                content = (
+                                    json.loads(msg.content)
+                                    if isinstance(msg.content, str)
+                                    else msg.content
+                                )
+                                if isinstance(content, list) and len(content) > 0:
+                                    if not config["configurable"]["artist_cache"].get(
+                                        cache_key
+                                    ):
+                                        config["configurable"]["artist_cache"][
+                                            cache_key
+                                        ] = content
+                                        logger.info(
+                                            f"💾 Cached artist search result for: '{query}'"
+                                        )
+                                    break
+                            except:
+                                pass
+
+    # Persist caches back to state
+    updates["search_cache"] = config["configurable"].get("search_cache", {})
+    updates["track_cache"] = config["configurable"].get("track_cache", {})
+    updates["artist_cache"] = config["configurable"].get("artist_cache", {})
 
     # Merge updates with result
     if updates:

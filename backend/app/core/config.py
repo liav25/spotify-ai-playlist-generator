@@ -24,6 +24,8 @@ class Settings(BaseSettings):
 
     # AI Agent Configuration
     openai_api_key: Optional[str] = os.getenv("OPENAI_API_KEY")
+    openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+    tavily_api_key: Optional[str] = os.getenv("TAVILY_API_KEY")
 
     # LangSmith tracing configuration
     langsmith_api_key: Optional[str] = os.getenv("LANGSMITH_API_KEY")
@@ -37,7 +39,6 @@ class Settings(BaseSettings):
     # Redis Configuration for token caching
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     redis_enabled: bool = os.getenv("REDIS_ENABLED", "true").lower() == "true"
-
 
     # Spotify API URLs
     spotify_token_url: str = "https://accounts.spotify.com/api/token"

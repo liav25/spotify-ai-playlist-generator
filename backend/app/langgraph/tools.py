@@ -4,6 +4,7 @@ import os
 from typing import List, Dict, Any, Optional
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
+from langchain_tavily import TavilySearch
 
 from .models import Track
 
@@ -69,6 +70,15 @@ def search_tracks(
         A list of dictionaries, each containing: id, name, artist, album, uri, popularity, and duration_ms.
     """
     logger.info(f"Searching tracks: query='{query}', limit={limit}, market={market}")
+
+    # Check cache first
+    cache_key = f"{query}_{limit}_{market}"
+    track_cache = config.get("configurable", {}).get("track_cache", {})
+    if cache_key in track_cache:
+        logger.info(f"🎯 Cache HIT for track search: '{query}'")
+        return track_cache[cache_key]
+
+    logger.info(f"🔍 Cache MISS for track search: '{query}' - performing search")
     try:
         spotify_client = config["configurable"].get("spotify_client")
         if not spotify_client:
@@ -107,6 +117,15 @@ def search_artists(
         A list of dictionaries, each containing: id, name, genres, and popularity.
     """
     logger.info(f"Searching artists: query='{query}', limit={limit}")
+
+    # Check cache first
+    cache_key = f"{query}_{limit}"
+    artist_cache = config.get("configurable", {}).get("artist_cache", {})
+    if cache_key in artist_cache:
+        logger.info(f"🎯 Cache HIT for artist search: '{query}'")
+        return artist_cache[cache_key]
+
+    logger.info(f"🔍 Cache MISS for artist search: '{query}' - performing search")
     try:
         spotify_client = config["configurable"].get("spotify_client")
         if not spotify_client:
@@ -690,6 +709,54 @@ def get_audio_features(
         return None
 
 
+@tool(
+    description="Search the web for music history, cultural context, trends, and artist information not available in Spotify",
+    parse_docstring=True,
+)
+@traceable(name="tavily_web_search")
+def tavily_search(
+    query: str,
+    config: RunnableConfig,
+    max_results: int = 5,
+) -> str:
+    """Search the web for music-related information using Tavily.
+
+    Use this tool to research:
+    - Music history and genre origins
+    - Cultural context for playlists
+    - Time-based queries (e.g., "popular songs in 2008")
+    - Emerging or indie artists not well-indexed in Spotify
+    - Music trends and news
+    - Context for vague user requests
+
+    Args:
+        query: Search query for music-related information.
+        config: Configuration (not used but kept for consistency).
+        max_results: Maximum number of search results to return. Default is 5.
+
+    Returns:
+        String containing search results with titles, URLs, and content snippets.
+    """
+    logger.info(f"Performing web search: query='{query}', max_results={max_results}")
+
+    # Check cache first
+    search_cache = config.get("configurable", {}).get("search_cache", {})
+    if query in search_cache:
+        logger.info(f"🎯 Cache HIT for Tavily search: '{query}'")
+        return search_cache[query]
+
+    logger.info(f"🔍 Cache MISS for Tavily search: '{query}' - performing search")
+    try:
+        search = TavilySearch(max_results=max_results, topic="general")
+        results = search.invoke({"query": query})
+        results_str = str(results)
+        logger.info(f"Web search completed: found {len(results)} results for '{query}'")
+        return results_str
+    except Exception as e:
+        logger.error(f"Error performing web search for query '{query}': {e}")
+        return f"Error: Unable to perform web search - {str(e)}"
+
+
 # Export all tools for the agent
 tools = [
     search_tracks,
@@ -703,4 +770,5 @@ tools = [
     get_playlist_tracks,
     remove_tracks_from_playlist,
     get_audio_features,
+    tavily_search,
 ]
