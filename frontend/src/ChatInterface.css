@@ -53,7 +53,8 @@
 
 .welcome-header {
   text-align: center;
-  max-width: 600px;
+  max-width: 100%;
+  width: 100%;
 }
 
 .welcome-icon {
@@ -97,7 +98,8 @@
 .main-description {
   margin: 16px 0 20px 0;
   padding: 0 20px;
-  max-width: 500px;
+  max-width: 100%;
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
 }
@@ -116,7 +118,8 @@
 .how-it-works {
   margin: 16px 0 0 0; /* Reduced top margin */
   text-align: center;
-  max-width: 400px;
+  max-width: 100%;
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
   padding: 0 20px;
