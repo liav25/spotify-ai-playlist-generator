@@ -49,6 +49,56 @@
   background: var(--color-bg-tertiary);
 }
 
+/* Pulse Animation - Only on mobile and only before first interaction */
+.mobile-menu-btn.pulse-animation {
+  position: relative;
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* First expanding ring */
+.mobile-menu-btn.pulse-animation::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--color-accent-primary);
+  border-radius: 8px;
+  transform: translate(-50%, -50%);
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+/* Second expanding ring (delayed) */
+.mobile-menu-btn.pulse-animation::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--color-accent-primary);
+  border-radius: 8px;
+  transform: translate(-50%, -50%);
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.2, 1) 0.4s infinite;
+  pointer-events: none;
+}
+
+/* Accessibility: Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu-btn.pulse-animation,
+  .mobile-menu-btn.pulse-animation::before,
+  .mobile-menu-btn.pulse-animation::after {
+    animation: none;
+  }
+
+  /* Provide static visual hint instead */
+  .mobile-menu-btn.pulse-animation {
+    box-shadow: 0 0 0 2px var(--color-accent-primary);
+  }
+}
+
 .playlist-icon {
   width: 20px;
   height: 20px;
@@ -67,16 +117,22 @@
   .mobile-menu-text {
     display: none;
   }
-  
+
   .mobile-menu-btn {
     width: 40px;
     min-width: 40px;
     padding: 0;
   }
-  
+
   .playlist-icon {
     width: 18px;
     height: 18px;
+  }
+
+  /* Adjust pulse animation for smaller button */
+  .mobile-menu-btn.pulse-animation::before,
+  .mobile-menu-btn.pulse-animation::after {
+    border-radius: 50%; /* Circular on small screens */
   }
 }
 
@@ -85,16 +141,22 @@
   .mobile-menu-text {
     display: none;
   }
-  
+
   .mobile-menu-btn {
     width: 44px;
     min-width: 44px;
     padding: 0;
   }
-  
+
   .playlist-icon {
     width: 20px;
     height: 20px;
+  }
+
+  /* Adjust pulse animation for icon-only button */
+  .mobile-menu-btn.pulse-animation::before,
+  .mobile-menu-btn.pulse-animation::after {
+    border-radius: 50%; /* Circular on icon-only */
   }
 }
 
@@ -191,6 +253,32 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+/* Pulse Ring Animation for Mobile Menu Button */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+/* Subtle glow pulse */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(29, 185, 84, 0);
+  }
+  50% {
+    box-shadow: 0 0 12px 4px rgba(29, 185, 84, 0.3);
   }
 }
 
@@ -421,18 +509,24 @@
   .mobile-header {
     display: flex;
   }
-  
+
   /* Show mobile sidebar backdrop when open */
   .mobile-sidebar-backdrop {
     display: block;
     animation: fadeIn 0.3s ease-out forwards;
   }
-  
+
   /* Adjust main content for mobile */
   .main-content {
     margin-left: 0;
     padding-top: 60px; /* Account for mobile header */
   }
+
+  /* Ensure pulse animation only shows on mobile */
+  .mobile-menu-btn.pulse-animation {
+    display: flex; /* Confirm it's visible */
+  }
+}
   
   /* Hide main content when sidebar is open on mobile */
   .app:has(.sidebar.mobile-open) .main-content {

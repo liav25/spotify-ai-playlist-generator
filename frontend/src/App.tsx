@@ -48,8 +48,10 @@ function App() {
 
 function AppContent({ user }: { user: User }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const [hasOpenedSidebar, setHasOpenedSidebar] = useState(false)
 
   const toggleMobileSidebar = () => {
+    setHasOpenedSidebar(true) // Stop pulse animation after first interaction
     setIsMobileSidebarOpen(!isMobileSidebarOpen)
   }
 
@@ -61,8 +63,8 @@ function AppContent({ user }: { user: User }) {
     <div className="app">
       {/* Mobile Header */}
       <div className="mobile-header">
-        <button 
-          className="mobile-menu-btn" 
+        <button
+          className={`mobile-menu-btn ${!hasOpenedSidebar ? 'pulse-animation' : ''}`}
           onClick={toggleMobileSidebar}
           aria-label="Show me playlists"
         >
