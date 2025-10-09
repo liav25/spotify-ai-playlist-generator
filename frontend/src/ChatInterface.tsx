@@ -17,6 +17,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
   const { setCurrentPlaylist } = usePlaylist();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [windowWidth, setWindowWidth] = useState<number>(() => (
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  ));
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -201,6 +216,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
     }
   ];
 
+  const getMaxVisiblePresets = (width: number) => {
+    if (width >= 1024) return presetOptions.length;
+    if (width >= 768) return 3;
+    if (width >= 600) return 2;
+    return 1;
+  };
+
+  const maxVisiblePresets = getMaxVisiblePresets(windowWidth);
+  const discoveryPreset = presetOptions.find(preset => preset.title === "What can you do?");
+  const secondaryPresets = presetOptions.filter(preset => preset.title !== "What can you do?");
+
+  const visiblePresetOptions = discoveryPreset
+    ? maxVisiblePresets <= 0
+      ? []
+      : [discoveryPreset, ...secondaryPresets.slice(0, maxVisiblePresets - 1)]
+    : presetOptions.slice(0, maxVisiblePresets);
+
   return (
     <div className="chat-interface" data-testid="chat-interface">
       {/* Buy me a coffee button - only visible during conversations */}
@@ -244,7 +276,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
           </div>
           
           <div className="preset-cards">
-            {presetOptions.map((preset, index) => (
+            {visiblePresetOptions.map((preset, index) => (
               <div
                 key={index}
                 className="preset-card"
