@@ -24,14 +24,16 @@
 .mobile-close-btn {
   display: none;
   position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 32px;
-  height: 32px;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px; /* iOS touch target guideline */
+  min-height: 44px;
   background: var(--color-bg-tertiary);
   color: var(--color-text-muted);
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   align-items: center;
   justify-content: center;
@@ -523,7 +525,7 @@
   
   .sidebar-header {
     padding: 20px 16px;
-    padding-top: 60px; /* Account for close button */
+    padding-top: 64px; /* Account for larger close button (44px + margin) */
   }
   
   .playlist-header {
@@ -546,19 +548,21 @@
   
   .sidebar-header {
     padding: 18px 14px;
-    padding-top: 56px;
+    padding-top: 62px; /* Account for close button */
   }
-  
+
   .mobile-close-btn {
-    width: 30px;
-    height: 30px;
-    top: 13px;
-    right: 13px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    top: 10px;
+    right: 10px;
   }
-  
+
   .close-icon {
-    width: 17px;
-    height: 17px;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -569,19 +573,21 @@
   
   .sidebar-header {
     padding: 16px 12px;
-    padding-top: 56px;
+    padding-top: 62px;
   }
-  
+
   .mobile-close-btn {
-    top: 12px;
-    right: 12px;
-    width: 28px;
-    height: 28px;
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
-  
+
   .close-icon {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
   }
   
   .logo-section {
@@ -612,19 +618,21 @@
   
   .sidebar-header {
     padding: 14px 10px;
-    padding-top: 52px;
+    padding-top: 62px;
   }
-  
+
   .mobile-close-btn {
-    width: 26px;
-    height: 26px;
-    top: 13px;
-    right: 10px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    top: 8px;
+    right: 8px;
   }
-  
+
   .close-icon {
-    width: 14px;
-    height: 14px;
+    width: 20px;
+    height: 20px;
   }
   
   .logo-section {
