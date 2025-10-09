@@ -57,20 +57,22 @@
 }
 
 .logo {
-  width: 32px;
-  height: 32px;
-  background: var(--color-accent-primary);
-  border-radius: 6px;
+  width: clamp(28px, 5vw, 72px);
+  height: clamp(28px, 5vw, 72px);
+  background: transparent; /* Show actual logo without background block */
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background-color 0.3s ease;
 }
 
-.spotify-logo {
-  width: 20px;
-  height: 20px;
-  color: white;
+/* Generic brand logo image inside sidebar header */
+.logo .brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .app-title {
@@ -631,13 +633,8 @@
   }
   
   .logo {
-    width: 26px;
-    height: 26px;
-  }
-  
-  .spotify-logo {
-    width: 16px;
-    height: 16px;
+    width: clamp(22px, 4.5vw, 32px);
+    height: clamp(22px, 4.5vw, 32px);
   }
   
   .app-title {

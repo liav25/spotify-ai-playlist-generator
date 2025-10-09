@@ -54,16 +54,23 @@
 }
 
 .welcome-icon {
-  width: 80px;
-  height: 80px;
-  background: var(--color-accent-primary);
-  border-radius: 20px;
+  width: clamp(80px, 12vw, 220px);
+  height: clamp(80px, 12vw, 220px);
+  background: transparent; /* Show actual logo without background block */
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 16px;
   transition: background-color 0.3s ease;
-  font-size: 40px;
+}
+
+/* Brand logo inside welcome header */
+.welcome-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .welcome-header h1 {
@@ -656,6 +663,16 @@
     font-size: 28px;
   }
   
+  /* Logo scales via clamp; no breakpoint override needed */
+  .welcome-icon {
+    width: clamp(64px, 10vw, 140px);
+    height: clamp(64px, 10vw, 140px);
+  }
+  .welcome-logo {
+    width: 100%;
+    height: 100%;
+  }
+  
   .welcome-header p {
     font-size: 16px;
   }
@@ -737,6 +754,16 @@
   .welcome-container {
     padding: 24px 16px;
     gap: 24px;
+  }
+  
+  /* Logo scales via clamp; no breakpoint override needed */
+  .welcome-icon {
+    width: clamp(56px, 12vw, 120px);
+    height: clamp(56px, 12vw, 120px);
+  }
+  .welcome-logo {
+    width: 100%;
+    height: 100%;
   }
   
   .welcome-header h1 {
@@ -1099,6 +1126,16 @@
     right: 10px;
   }
   
+  /* Logo scales via clamp; no breakpoint override needed */
+  .welcome-icon {
+    width: clamp(52px, 14vw, 100px);
+    height: clamp(52px, 14vw, 100px);
+  }
+  .welcome-logo {
+    width: 100%;
+    height: 100%;
+  }
+  
   .bmc-button-image {
     height: 28px;
   }
@@ -1108,6 +1145,16 @@
   .buy-me-coffee-widget {
     bottom: calc(var(--input-area-height) + 12px);
     right: 8px;
+  }
+  
+  /* Logo scales via clamp; no breakpoint override needed */
+  .welcome-icon {
+    width: clamp(48px, 16vw, 96px);
+    height: clamp(48px, 16vw, 96px);
+  }
+  .welcome-logo {
+    width: 100%;
+    height: 100%;
   }
   
   .bmc-button-image {
@@ -1121,4 +1168,3 @@
     display: none;
   }
 }
-

@@ -120,20 +120,21 @@
 }
 
 .mobile-logo {
-  width: 24px;
-  height: 24px;
-  background: var(--color-accent-primary);
-  border-radius: 4px;
+  width: clamp(20px, 5.5vw, 32px);
+  height: clamp(20px, 5.5vw, 32px);
+  background: transparent; /* Show actual logo without background block */
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.mobile-logo .spotify-logo {
-  width: 14px;
-  height: 14px;
-  color: white;
+/* Generic brand logo image inside mobile header */
+.mobile-logo .brand-logo-img {
+  height: 100%;
+  width: auto;
+  display: block;
 }
 
 .mobile-app-title {
@@ -569,13 +570,8 @@
   }
   
   .mobile-logo {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .mobile-logo .spotify-logo {
-    width: 12px;
-    height: 12px;
+    width: clamp(18px, 6vw, 24px);
+    height: clamp(18px, 6vw, 24px);
   }
   
   .login-section {
@@ -592,4 +588,3 @@
     min-width: 160px;
   }
 }
-

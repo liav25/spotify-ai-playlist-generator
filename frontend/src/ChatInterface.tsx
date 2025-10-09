@@ -3,6 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import { chatApi, ChatMessage } from './chatApi';
 import { usePlaylist } from './PlaylistContext';
 import './ChatInterface.css';
+// Resolve logo URL via Vite so bundler handles it correctly
+const appLogoUrl = new URL('../mrdjlogo.svg', import.meta.url).href
 
 interface ChatInterfaceProps {
   username: string;
@@ -223,7 +225,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
         <div className="welcome-container">
           <div className="welcome-header">
             <div className="welcome-icon">
-              🎵
+              <img src={appLogoUrl} alt="Mr. DJ logo" className="welcome-logo" />
             </div>
             <h1>Hi, I'm Mr. DJ</h1>
             <div className="main-description">
