@@ -9,6 +9,9 @@
   display: flex;
   position: relative;
   transition: background-color 0.3s ease, color 0.3s ease;
+  max-width: 100vw; /* Prevent horizontal overflow */
+  overflow-x: hidden; /* Ensure no horizontal scroll */
+  width: 100%;
 }
 
 /* Mobile Header */
@@ -26,6 +29,9 @@
   align-items: center;
   justify-content: space-between;
   transition: background-color 0.3s ease, border-color 0.3s ease;
+  max-width: 100vw;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .mobile-menu-btn {
@@ -227,6 +233,9 @@
   display: flex;
   flex-direction: column;
   transition: background-color 0.3s ease;
+  max-width: 100%;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* Loading State */
@@ -462,26 +471,25 @@
   .mobile-menu-btn.pulse-animation {
     display: flex; /* Confirm it's visible */
   }
-}
-  
+
   /* Hide main content when sidebar is open on mobile */
   .app:has(.sidebar.mobile-open) .main-content {
     overflow: hidden;
   }
-  
+
   .login-section {
     padding: 32px 24px;
   }
-  
+
   .login-section h1 {
     font-size: 28px;
   }
-  
+
   /* Login state adjustments for mobile */
   .app.login-state .main-content {
     padding-top: 0;
   }
-  
+
   .app.login-state .mobile-header {
     display: none;
   }
