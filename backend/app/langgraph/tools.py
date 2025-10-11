@@ -492,6 +492,7 @@ def create_playlist(
             "owner": playlist.get("owner", {}).get("display_name") or "Unknown",
             "tracks": [],  # New playlist starts with empty tracks array
             "images": playlist.get("images", []),
+            "external_urls": playlist.get("external_urls", {}),
         }
 
         logger.info(f"Successfully created playlist '{name}' with ID: {playlist['id']}")
@@ -522,6 +523,7 @@ def add_tracks_to_playlist(
         True if tracks were added successfully, False otherwise.
     """
     logger.info(f"Adding {len(track_uris)} tracks to playlist {playlist_id}")
+
     try:
         spotify_client = (
             config["configurable"].get("spotify_client") if config else None
@@ -617,6 +619,7 @@ def get_playlist_tracks(
             "owner": playlist.get("owner", {}).get("display_name") or "Unknown",
             "tracks": tracks,
             "images": playlist.get("images") or [],
+            "external_urls": playlist.get("external_urls", {}),
         }
 
         logger.info(

@@ -226,6 +226,7 @@
 
 /* Main Content Area */
 .main-content {
+  position: relative; /* Create positioning context for status overlay */
   flex: 1;
   margin-left: 400px;
   background: var(--color-bg-primary);

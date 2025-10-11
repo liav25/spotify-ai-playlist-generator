@@ -1,14 +1,22 @@
 import React, { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { chatApi, ChatMessage } from './chatApi';
+import { chatApi, ChatMessage, ToolCallEvent } from './chatApi';
 import { usePlaylist } from './PlaylistContext';
 import './ChatInterface.css';
 // Resolve logo URL via Vite so bundler handles it correctly
 const appLogoUrl = new URL('../mrdjlogo.svg', import.meta.url).href
+const tavilyLogoUrl = new URL('../tavily_logo.png', import.meta.url).href
 
 interface ChatInterfaceProps {
   username: string;
 }
+
+type PresetOption = {
+  title: string;
+  icon: string;
+  description: string;
+  predefinedResponse?: string;
+};
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -17,6 +25,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
   const { setCurrentPlaylist } = usePlaylist();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const skipNextScrollRef = useRef(false);
   const [windowWidth, setWindowWidth] = useState<number>(() => (
     typeof window !== 'undefined' ? window.innerWidth : 1024
   ));
@@ -35,6 +44,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
+    if (skipNextScrollRef.current) {
+      skipNextScrollRef.current = false;
+      return;
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -58,30 +71,217 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
   }, [inputValue]);
 
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+  const sendStreamingMessage = async (content: string) => {
+    setIsLoading(true);
+    // Reset tool call indicator
 
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: inputValue,
-      timestamp: new Date()
+    let statusMessageId: string | null = null;
+    let toolMessageId: string | null = null;
+    let currentToolLabel = '';
+    let hasToolActivity = false;
+    let pendingStatusMessage: string | null = null;
+    const toolActivities: Array<{ id: string; label: string; status: ToolMessageStatus }> = [];
+
+    const updateStatusMessage = (nextContent: string) => {
+      if (!statusMessageId) return;
+      const messageId = statusMessageId;
+      setMessages(prev =>
+        prev.map(message =>
+          message.id === messageId
+            ? {
+                ...message,
+                content: nextContent,
+                timestamp: new Date()
+              }
+            : message
+        )
+      );
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
-    setIsLoading(true);
+    type ToolMessageStatus = 'active' | 'completed' | 'error';
+
+    const ensureStatusMessage = (content: string) => {
+      if (!statusMessageId) {
+        statusMessageId = crypto.randomUUID();
+        const statusChatMessage: ChatMessage = {
+          id: statusMessageId,
+          role: 'assistant',
+          content,
+          timestamp: new Date(),
+          metadata: {
+            type: 'status'
+          }
+        };
+        setMessages(prev => [...prev, statusChatMessage]);
+      } else {
+        updateStatusMessage(content);
+      }
+    };
+
+    const syncToolMessage = (status: ToolMessageStatus) => {
+      const latestLabel = toolActivities.length > 0
+        ? toolActivities[toolActivities.length - 1].label
+        : currentToolLabel || 'Tool activity';
+      const activitiesSnapshot = toolActivities.map(activity => ({ ...activity }));
+
+      if (!toolMessageId) {
+        toolMessageId = crypto.randomUUID();
+        const toolChatMessage: ChatMessage = {
+          id: toolMessageId,
+          role: 'assistant',
+          content: latestLabel,
+          timestamp: new Date(),
+          metadata: {
+            type: 'tool',
+            status,
+            expanded: true,
+            toolActivities: activitiesSnapshot
+          }
+        };
+        setMessages(prev => [...prev, toolChatMessage]);
+      } else {
+        const messageId = toolMessageId;
+        setMessages(prev =>
+          prev.map(message =>
+            message.id === messageId
+              ? {
+                  ...message,
+                  content: latestLabel,
+                  timestamp: new Date(),
+                  metadata: {
+                    ...(message.metadata || {}),
+                    type: 'tool',
+                    status,
+                    expanded: message.metadata?.expanded ?? true,
+                    toolActivities: activitiesSnapshot
+                  }
+                }
+              : message
+          )
+        );
+      }
+    };
+
+    const collapseToolPanel = () => {
+      if (!toolMessageId) return;
+      const messageId = toolMessageId;
+      setMessages(prev =>
+        prev.map(message =>
+          message.id === messageId
+            ? {
+                ...message,
+                metadata: {
+                  ...(message.metadata || {}),
+                  type: 'tool',
+                  expanded: false,
+                  status: (message.metadata && message.metadata.status) || 'completed',
+                  toolActivities: message.metadata?.toolActivities || []
+                }
+              }
+            : message
+        )
+      );
+    };
+
+    const handleToolEvent = (event: ToolCallEvent) => {
+      if (event.type === 'status') {
+        if (!event.message) {
+          return;
+        }
+
+        if (!hasToolActivity) {
+          pendingStatusMessage = event.message;
+        } else {
+          ensureStatusMessage(event.message);
+        }
+      } else if (event.type === 'tool_start') {
+        if (!event.message) {
+          return;
+        }
+
+        hasToolActivity = true;
+
+        if (pendingStatusMessage) {
+          ensureStatusMessage(pendingStatusMessage);
+          pendingStatusMessage = null;
+        }
+
+        const lastActivity = toolActivities[toolActivities.length - 1];
+
+        if (!(lastActivity && lastActivity.label === event.message)) {
+          const activity = {
+            id: crypto.randomUUID(),
+            label: event.message,
+            status: 'active' as ToolMessageStatus
+          };
+          toolActivities.push(activity);
+          currentToolLabel = activity.label;
+        } else {
+          lastActivity.status = 'active';
+          currentToolLabel = lastActivity.label;
+        }
+        syncToolMessage('active');
+      } else if (event.type === 'tool_end') {
+        for (let i = toolActivities.length - 1; i >= 0; i -= 1) {
+          if (toolActivities[i].status === 'active') {
+            toolActivities[i] = {
+              ...toolActivities[i],
+              status: 'completed'
+            };
+            break;
+          }
+        }
+
+        const hasActive = toolActivities.some(activity => activity.status === 'active');
+        if (toolActivities.length > 0) {
+          currentToolLabel = toolActivities[toolActivities.length - 1].label;
+        }
+        syncToolMessage(hasActive ? 'active' : 'completed');
+      }
+    };
+
+    const markToolError = () => {
+      if (toolActivities.length === 0) {
+        return;
+      }
+      const lastIndex = toolActivities.length - 1;
+      toolActivities[lastIndex] = {
+        ...toolActivities[lastIndex],
+        status: 'error'
+      };
+      currentToolLabel = toolActivities[lastIndex].label;
+      syncToolMessage('error');
+    };
 
     try {
-      const response = await chatApi.sendMessage(inputValue);
+      const response = await chatApi.sendMessageWithStreaming(content, handleToolEvent);
+
+      if (statusMessageId) {
+        updateStatusMessage('✅ Finished processing your request.');
+      }
+
+      if (toolActivities.length > 0) {
+        for (let i = 0; i < toolActivities.length; i += 1) {
+          if (toolActivities[i].status === 'active') {
+            toolActivities[i] = {
+              ...toolActivities[i],
+              status: 'completed'
+            };
+          }
+        }
+        syncToolMessage('completed');
+      }
+      pendingStatusMessage = null;
+
       setMessages(prev => [...prev, response.message]);
-      
-      // Update playlist if provided
+
+      if (toolActivities.length > 0) {
+        collapseToolPanel();
+      }
+
       if (response.playlistData) {
         setCurrentPlaylist(response.playlistData);
-        
-        // If this is a newly created playlist with no tracks, 
-        // fetch the updated playlist data after a short delay to get any tracks that were added
+
         if (response.playlistData.tracks.length === 0) {
           setTimeout(async () => {
             try {
@@ -92,12 +292,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
             } catch (error) {
               console.warn('Failed to fetch updated playlist:', error);
             }
-          }, 2000); // Wait 2 seconds for tracks to be added
+          }, 2000);
         }
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      
+
+      if (statusMessageId) {
+        updateStatusMessage('⚠️ There was a problem processing your request.');
+      }
+
+      if (toolActivities.length > 0) {
+        markToolError();
+      }
+      pendingStatusMessage = null;
+
       const errorMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -108,6 +317,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return;
+
+    const messageContent = inputValue;
+
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: messageContent,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+
+    await sendStreamingMessage(messageContent);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -117,55 +344,47 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
     }
   };
 
-  const handlePresetClick = async (description: string) => {
+  const handlePresetClick = async (preset: PresetOption) => {
     if (isLoading) return;
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: description,
+      content: preset.description,
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-
-    try {
-      const response = await chatApi.sendMessage(description);
-      setMessages(prev => [...prev, response.message]);
-      
-      // Update playlist if provided
-      if (response.playlistData) {
-        setCurrentPlaylist(response.playlistData);
-        
-        // If this is a newly created playlist with no tracks, 
-        // fetch the updated playlist data after a short delay to get any tracks that were added
-        if (response.playlistData.tracks.length === 0) {
-          setTimeout(async () => {
-            try {
-              const updatedPlaylist = await chatApi.fetchPlaylist(response.playlistData!.id);
-              if (updatedPlaylist && updatedPlaylist.tracks.length > 0) {
-                setCurrentPlaylist(updatedPlaylist);
-              }
-            } catch (error) {
-              console.warn('Failed to fetch updated playlist:', error);
-            }
-          }, 2000); // Wait 2 seconds for tracks to be added
-        }
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      
-      const errorMessage: ChatMessage = {
+    if (preset.predefinedResponse) {
+      const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: `I'm sorry, I encountered an error while processing your request. ${error instanceof Error ? error.message : 'Please try again or check your connection.'}`,
+        content: preset.predefinedResponse,
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
+
+      setMessages(prev => [...prev, userMessage, assistantMessage]);
+      return;
     }
+
+    setMessages(prev => [...prev, userMessage]);
+    await sendStreamingMessage(preset.description);
+  };
+
+  const handleToggleToolMessage = (messageId: string) => {
+    skipNextScrollRef.current = true;
+    setMessages(prev =>
+      prev.map(message =>
+        message.id === messageId
+          ? {
+              ...message,
+              metadata: {
+                ...(message.metadata || { type: 'tool' }),
+                expanded: !(message.metadata?.expanded ?? true)
+              }
+            }
+          : message
+      )
+    );
   };
 
   // Function to detect if text contains Hebrew characters
@@ -192,12 +411,66 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
     return children?.toString() || '';
   };
 
+  const formatListItemText = (text: string): string => {
+    const separators = [' — ', ' – ', ' - ', ' –', ' —', ' -'];
+    for (const separator of separators) {
+      const index = text.indexOf(separator);
+      if (index > 0) {
+        const name = text.slice(0, index).trim();
+        const description = text.slice(index + separator.length).trim();
+        if (name && description) {
+          return `${name}: ${description}`;
+        }
+      }
+    }
+    return text;
+  };
 
-  const presetOptions = [
+  const containsTavilyReference = (text: string): boolean =>
+    text.includes('Tavily');
+
+  const renderInlineTavilyLogo = () => (
+    <img
+      src={tavilyLogoUrl}
+      alt="Tavily logo"
+      className="inline-tool-logo"
+    />
+  );
+
+  const renderToolCallLabel = (label: string): React.ReactNode => {
+    if (containsTavilyReference(label)) {
+      const parts = label.split('Tavily');
+      const renderedParts = [];
+      for (let i = 0; i < parts.length; i += 1) {
+        if (i > 0) {
+          renderedParts.push(
+            <React.Fragment key={`tavily-${i}`}>
+              Tavily
+              {renderInlineTavilyLogo()}
+            </React.Fragment>
+          );
+        }
+        if (parts[i]) {
+          renderedParts.push(
+            <React.Fragment key={`text-${i}`}>{parts[i]}</React.Fragment>
+          );
+        }
+      }
+      return renderedParts;
+    }
+    return label;
+  };
+
+
+  const WHAT_CAN_YOU_DO_RESPONSE =
+    "Hey there! I'm Mr. DJ 🎧, your AI playlist curator ready to spin custom mixes from mellow study sessions to sweaty workouts. Share the mood, occasion, or artists you love and I'll blend Spotify insights with audio features for a smooth flow. I can whip up sunrise chillouts, HIIT boosters, nostalgic 90s sing-alongs, or globe-trotting discovery journeys. Just drop the vibe and I'll start mixing!";
+
+  const presetOptions: PresetOption[] = [
     {
       title: "What can you do?",
       icon: "❓",
-      description: "What can you do?"
+      description: "What can you do?",
+      predefinedResponse: WHAT_CAN_YOU_DO_RESPONSE
     },
     {
       title: "Create a workout playlist",
@@ -238,15 +511,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
       {/* Buy me a coffee button - only visible during conversations */}
       {messages.length > 0 && (
         <div className="buy-me-coffee-widget">
-          <a 
-            href="https://www.buymeacoffee.com/liav25" 
-            target="_blank" 
+          <a
+            href="https://www.buymeacoffee.com/liav25"
+            target="_blank"
             rel="noopener noreferrer"
             className="bmc-button"
           >
-            <img 
-              src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" 
-              alt="Buy Me A Coffee" 
+            <img
+              src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
+              alt="Buy Me A Coffee"
               className="bmc-button-image"
             />
           </a>
@@ -280,7 +553,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
               <div
                 key={index}
                 className="preset-card"
-                onClick={() => handlePresetClick(preset.description)}
+                onClick={() => handlePresetClick(preset)}
               >
                 <div className="preset-icon">{preset.icon}</div>
                 <div className="preset-content">
@@ -289,24 +562,84 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
               </div>
             ))}
           </div>
+
         </div>
       ) : (
         // Show regular chat messages
         <div className="messages-container">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`message ${message.role === 'user' ? 'user-message' : 'assistant-message'}`}
-              data-testid="chat-message"
-            >
-              <div className="message-bubble">
-                <div className="message-content">
-                  {message.role === 'assistant' ? (
-                    <ReactMarkdown
-                      components={{
-                        a: ({ href, children }) => (
-                          <a 
-                            href={href} 
+          {messages.map((message) => {
+            const isToolMessage = message.metadata?.type === 'tool';
+            const toolActivities = isToolMessage ? (message.metadata?.toolActivities || []) : [];
+            const expanded = isToolMessage ? (message.metadata?.expanded ?? true) : false;
+            const toolStatus = isToolMessage ? (message.metadata?.status || 'active') : 'active';
+            const latestActivity = toolActivities.length > 0 ? toolActivities[toolActivities.length - 1] : null;
+
+            return (
+              <div
+                key={message.id}
+                className={`message ${message.role === 'user' ? 'user-message' : 'assistant-message'}`}
+                data-testid="chat-message"
+              >
+                <div className={`message-bubble ${isToolMessage ? 'tool-call-bubble' : ''}`}>
+                  <div className="message-content">
+                    {isToolMessage ? (
+                      <div className={`tool-call-message ${toolStatus} ${expanded ? 'expanded' : 'collapsed'}`}>
+                        <button
+                          type="button"
+                          className="tool-call-toggle"
+                          onClick={() => handleToggleToolMessage(message.id)}
+                          aria-expanded={expanded}
+                        >
+                          <span className="tool-call-prefix">Tool Calls</span>
+                          <span className="tool-call-toggle-icon" aria-hidden="true" />
+                        </button>
+
+                        {!expanded && latestActivity && (
+                          <div className="tool-call-summary">
+                            <span className="tool-call-label">{renderToolCallLabel(latestActivity.label)}</span>
+                            {toolStatus === 'active' && (
+                              <span className="tool-call-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                              </span>
+                            )}
+                            {toolStatus === 'completed' && (
+                              <span className="tool-call-status-icon">✅ Done</span>
+                            )}
+                            {toolStatus === 'error' && (
+                              <span className="tool-call-status-icon error">⚠️ Error</span>
+                            )}
+                          </div>
+                        )}
+
+                        {expanded && (
+                          <ul className="tool-call-list">
+                            {toolActivities.map((activity) => (
+                              <li key={activity.id} className={`tool-call-item ${activity.status}`}>
+                                <span className="tool-call-item-label">{renderToolCallLabel(activity.label)}</span>
+                                {activity.status === 'active' ? (
+                                  <span className="tool-call-dots">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                  </span>
+                                ) : activity.status === 'completed' ? (
+                                  <span className="tool-call-item-status success">✅ Done</span>
+                                ) : (
+                                  <span className="tool-call-item-status error">⚠️ Error</span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ) : message.role === 'assistant' ? (
+                      <ReactMarkdown
+                        components={{
+                          a: ({ href, children }) => (
+                            <a 
+                              href={href} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="message-link"
@@ -317,23 +650,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
                         img: () => null, // Hide images to keep track lists clean
                         li: ({ children }) => {
                           const textContent = extractTextContent(children);
+                          const formattedText = formatListItemText(textContent);
+                          const shouldAppendLogo = containsTavilyReference(textContent);
                           return (
                             <li 
                               dir={getTextDirection(textContent)}
                               style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
                             >
-                              {children}
+                              {formattedText}
+                              {shouldAppendLogo && (
+                                <>
+                                  {' '}
+                                  {renderInlineTavilyLogo()}
+                                </>
+                              )}
                             </li>
                           );
                         },
                         p: ({ children }) => {
                           const textContent = extractTextContent(children);
+                          const shouldAppendLogo = containsTavilyReference(textContent);
                           return (
                             <p 
                               dir={getTextDirection(textContent)}
                               style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
                             >
                               {children}
+                              {shouldAppendLogo && (
+                                <>
+                                  {' '}
+                                  {renderInlineTavilyLogo()}
+                                </>
+                              )}
                             </p>
                           );
                         },
@@ -389,8 +737,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
                 </div>
               </div>
             </div>
-          ))}
-          
+            );
+          })}
+
           {/* Typing Indicator */}
           {isLoading && (
             <div className="message assistant-message typing-indicator">
@@ -404,6 +753,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
               </div>
             </div>
           )}
+
           
           <div ref={messagesEndRef} />
         </div>

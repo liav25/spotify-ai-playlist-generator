@@ -38,6 +38,58 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
     return `${minutes}m`;
   };
 
+  const playlistUrl = currentPlaylist
+    ? currentPlaylist.external_urls.spotify ||
+      `https://open.spotify.com/playlist/${currentPlaylist.id}`
+    : null;
+
+  const renderPlaylistHeader = () => {
+    if (!currentPlaylist) {
+      return null;
+    }
+
+    const headerContent = (
+      <div className="playlist-header">
+        <div className="playlist-cover">
+          {currentPlaylist.images && currentPlaylist.images.length > 0 ? (
+            <img 
+              src={currentPlaylist.images[0].url} 
+              alt={`${currentPlaylist.name} cover`}
+              className="playlist-cover-image"
+            />
+          ) : (
+            <div className="playlist-cover-placeholder">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="playlist-icon">
+                <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>
+              </svg>
+            </div>
+          )}
+        </div>
+        <div className="playlist-info">
+          <h3 className="playlist-title">{currentPlaylist.name}</h3>
+          <div className="playlist-stats">
+            {currentPlaylist.tracks.length} songs • {formatTotalDuration(currentPlaylist.tracks)}
+          </div>
+        </div>
+      </div>
+    );
+
+    if (!playlistUrl) {
+      return headerContent;
+    }
+
+    return (
+      <a
+        href={playlistUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="playlist-header-link"
+      >
+        {headerContent}
+      </a>
+    );
+  };
+
   return (
     <div className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
       <div className="sidebar-header">
@@ -87,29 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
           </div>
         ) : currentPlaylist ? (
           <>
-            <div className="playlist-header">
-              <div className="playlist-cover">
-                {currentPlaylist.images && currentPlaylist.images.length > 0 ? (
-                  <img 
-                    src={currentPlaylist.images[0].url} 
-                    alt={`${currentPlaylist.name} cover`}
-                    className="playlist-cover-image"
-                  />
-                ) : (
-                  <div className="playlist-cover-placeholder">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="playlist-icon">
-                      <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>
-                    </svg>
-                  </div>
-                )}
-              </div>
-              <div className="playlist-info">
-                <h3 className="playlist-title">{currentPlaylist.name}</h3>
-                <div className="playlist-stats">
-                  {currentPlaylist.tracks.length} songs • {formatTotalDuration(currentPlaylist.tracks)}
-                </div>
-              </div>
-            </div>
+            {renderPlaylistHeader()}
             
             <div className="playlist-tracks">
               {currentPlaylist.tracks.map((track, index) => (

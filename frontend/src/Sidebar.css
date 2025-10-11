@@ -220,6 +220,17 @@
   align-items: center;
 }
 
+.playlist-header-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.playlist-header-link:hover .playlist-title,
+.playlist-header-link:focus .playlist-title {
+  text-decoration: underline;
+}
+
 .playlist-cover {
   flex-shrink: 0;
 }

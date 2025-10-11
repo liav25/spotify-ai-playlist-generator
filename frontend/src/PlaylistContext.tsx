@@ -23,6 +23,7 @@ export interface PlaylistData {
   owner: string;
   tracks: PlaylistTrack[];
   images: Array<{ url: string; height: number; width: number }>;
+  external_urls: Record<string, string>;
 }
 
 interface PlaylistContextType {

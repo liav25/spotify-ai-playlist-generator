@@ -6,7 +6,10 @@ import uuid
 import logging
 import spotipy
 import os
+import json
+import asyncio
 from fastapi import APIRouter, HTTPException, status, Request
+from fastapi.responses import StreamingResponse
 from langchain_core.messages import HumanMessage
 
 from ..api.models import ChatRequest, ChatResponse, PlaylistData
@@ -16,7 +19,6 @@ from ..langgraph.agent import assistant_ui_graph
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_request: ChatRequest, request: Request):
@@ -95,6 +97,7 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
             playlist_data.setdefault("total_tracks", len(tracks))
             playlist_data["owner"] = playlist_data.get("owner") or "Unknown"
             playlist_data.setdefault("images", [])
+            playlist_data.setdefault("external_urls", {})
 
             track_count = len(tracks)
             logger.debug(
@@ -125,3 +128,162 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Chat processing failed: {str(e)}",
         )
+
+
+@router.post("/chat/stream")
+async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
+    """Streaming chat endpoint that sends tool call updates via Server-Sent Events"""
+
+    logger.info("🚀 Streaming chat request received")
+    logger.debug(f"📝 Message: {chat_request.message}")
+    logger.debug(f"🔗 Thread ID: {chat_request.thread_id}")
+
+    async def event_generator():
+        try:
+            spotify_client = await spotify_service.get_client()
+
+            # Generate thread_id if not provided
+            thread_id = chat_request.thread_id or str(uuid.uuid4())
+            logger.info(f"🧵 Using thread ID: {thread_id}")
+
+            # Send initial status
+            yield f"data: {json.dumps({'type': 'status', 'message': 'Starting...'})}\n\n"
+
+            # Prepare the state for the agent
+            initial_state = {
+                "messages": [HumanMessage(content=chat_request.message)],
+                "playlist_id": None,
+                "playlist_name": None,
+                "user_intent": chat_request.message,
+            }
+
+            # Configuration for the agent
+            config = {
+                "configurable": {
+                    "thread_id": thread_id,
+                    "spotify_client": spotify_client,
+                },
+                "recursion_limit": 100,
+            }
+
+            # Call the LangGraph agent with streaming
+            logger.info(f"🤖 Calling LangGraph agent in streaming mode")
+
+            # Stream through agent execution and build up the final state
+            final_state = {}
+            async for event in assistant_ui_graph.astream(initial_state, config):
+                # Check if client disconnected
+                if await request.is_disconnected():
+                    logger.info("Client disconnected")
+                    break
+
+                # Process agent events and accumulate state
+                if "agent" in event:
+                    agent_output = event["agent"]
+                    # Merge agent output into final state
+                    final_state.update(agent_output)
+
+                    messages = agent_output.get("messages", [])
+                    if messages:
+                        last_message = messages[-1]
+                        # Check for tool calls
+                        if (
+                            hasattr(last_message, "tool_calls")
+                            and last_message.tool_calls
+                        ):
+                            for tool_call in last_message.tool_calls:
+                                tool_name = tool_call.get("name")
+                                # Map tool names to friendly messages
+                                tool_messages = {
+                                    "search_tracks": "🔍 Searching for tracks...",
+                                    "search_artists": "👤 Searching for artists...",
+                                    "get_artist_top_tracks": "🎵 Getting artist's top tracks...",
+                                    "get_track_recommendations": "✨ Getting personalized recommendations...",
+                                    "get_available_genres": "🎼 Fetching available genres...",
+                                    "create_playlist": "📝 Creating your playlist...",
+                                    "add_tracks_to_playlist": "➕ Adding tracks to playlist...",
+                                    "get_playlist_tracks": "📋 Getting playlist tracks...",
+                                    "tavily_search": "🌐 Researching music context (Powered by Tavily)...",
+                                    "get_user_info": "👤 Getting user information...",
+                                    "get_audio_features": "🎚️ Analyzing audio features...",
+                                    "remove_tracks_from_playlist": "➖ Removing tracks from playlist...",
+                                }
+
+                                friendly_message = tool_messages.get(
+                                    tool_name, f"⚙️ Running {tool_name}"
+                                )
+
+                                yield f"data: {json.dumps({'type': 'tool_start', 'tool': tool_name, 'message': friendly_message})}\n\n"
+                                await asyncio.sleep(0)  # Yield control
+
+                elif "tools" in event:
+                    # Tool execution completed - merge tools output into final state
+                    tools_output = event["tools"]
+                    final_state.update(tools_output)
+
+                    yield f"data: {json.dumps({'type': 'tool_end'})}\n\n"
+                    await asyncio.sleep(0)
+
+            # Use the accumulated final state
+            result = final_state if final_state else None
+
+            # If we didn't get a result from streaming, fall back to invoke
+            if result is None or not result.get("messages"):
+                logger.warning("⚠️ No result from streaming, falling back to ainvoke")
+                result = await assistant_ui_graph.ainvoke(initial_state, config)
+
+            # Extract the final message
+            response_content = (
+                "I apologize, but I encountered an issue processing your request."
+            )
+            if result and result.get("messages"):
+                final_message = result["messages"][-1]
+                response_content = (
+                    final_message.content
+                    if hasattr(final_message, "content")
+                    else str(final_message)
+                )
+
+            # Extract playlist data if available
+            playlist_data = result.get("playlist_data") if result else None
+            if playlist_data:
+                tracks = playlist_data.get("tracks", [])
+                if not isinstance(tracks, list):
+                    tracks = []
+                    playlist_data["tracks"] = tracks
+
+                playlist_data.setdefault("total_tracks", len(tracks))
+                playlist_data["owner"] = playlist_data.get("owner") or "Unknown"
+                playlist_data.setdefault("images", [])
+                playlist_data.setdefault("external_urls", {})
+
+            # Send final response
+            final_response = {
+                "type": "complete",
+                "message": response_content,
+                "thread_id": thread_id,
+                "playlist_data": playlist_data,
+            }
+
+            yield f"data: {json.dumps(final_response)}\n\n"
+            logger.info(
+                f"✅ Streaming chat completed successfully for thread {thread_id}"
+            )
+
+        except Exception as e:
+            logger.error(f"💥 Streaming error: {str(e)}", exc_info=True)
+            error_response = {
+                "type": "error",
+                "message": f"Chat processing failed: {str(e)}",
+            }
+            yield f"data: {json.dumps(error_response)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+        },
+    )

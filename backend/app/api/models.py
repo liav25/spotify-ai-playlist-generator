@@ -25,6 +25,7 @@ class PlaylistData(BaseModel):
     owner: str
     tracks: List[PlaylistTrack]
     images: Optional[List[Dict[str, Any]]] = []
+    external_urls: Dict[str, str] = {}
 
 
 class ChatRequest(BaseModel):
