@@ -229,10 +229,49 @@ export class ChatApi {
       let finalMessage = '';
       let finalThreadId = this.threadId || '';
       let finalPlaylistData: PlaylistData | undefined;
+      let sseBuffer = '';
 
       if (!reader) {
         throw new Error('Failed to get response reader');
       }
+
+      const processEventChunk = (eventChunk: string) => {
+        const dataLines = eventChunk
+          .split('\n')
+          .filter(line => line.startsWith('data:'));
+
+        if (dataLines.length === 0) {
+          return;
+        }
+
+        const payload = dataLines
+          .map(line => line.slice(5).trimStart())
+          .join('\n');
+
+        if (!payload) {
+          return;
+        }
+
+        try {
+          const event: ToolCallEvent = JSON.parse(payload);
+          console.log('Received SSE event:', event);
+
+          if (event.type === 'tool_start' || event.type === 'status') {
+            onToolCall(event);
+          } else if (event.type === 'tool_end') {
+            onToolCall(event);
+          } else if (event.type === 'complete') {
+            console.log('Received complete event with message:', event.message);
+            finalMessage = event.message;
+            finalThreadId = event.thread_id || finalThreadId;
+            finalPlaylistData = event.playlist_data;
+          } else if (event.type === 'error') {
+            throw new Error(event.message);
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse SSE event payload:', payload, parseError);
+        }
+      };
 
       try {
         while (true) {
@@ -243,36 +282,19 @@ export class ChatApi {
             break;
           }
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
+          sseBuffer += decoder.decode(value, { stream: true });
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              try {
-                const event: ToolCallEvent = JSON.parse(data);
-                console.log('Received SSE event:', event);
+          const eventChunks = sseBuffer.split('\n\n');
+          sseBuffer = eventChunks.pop() ?? '';
 
-                // Emit tool call events to callback
-                if (event.type === 'tool_start' || event.type === 'status') {
-                  onToolCall(event);
-                } else if (event.type === 'tool_end') {
-                  onToolCall(event);
-                } else if (event.type === 'complete') {
-                  console.log('Received complete event with message:', event.message);
-                  finalMessage = event.message;
-                  finalThreadId = event.thread_id || finalThreadId;
-                  finalPlaylistData = event.playlist_data;
-                } else if (event.type === 'error') {
-                  throw new Error(event.message);
-                }
-              } catch (parseError) {
-                console.warn('Failed to parse SSE event:', data, parseError);
-              }
-            }
+          for (const eventChunk of eventChunks) {
+            processEventChunk(eventChunk);
           }
         }
       } finally {
+        if (sseBuffer.trim().length > 0) {
+          processEventChunk(sseBuffer);
+        }
         reader.releaseLock();
       }
 
