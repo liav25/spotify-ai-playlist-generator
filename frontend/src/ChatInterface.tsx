@@ -463,7 +463,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
 
 
   const WHAT_CAN_YOU_DO_RESPONSE =
-    "Hey there! I'm Mr. DJ 🎧, your AI playlist curator ready to spin custom mixes from mellow study sessions to sweaty workouts. Share the mood, occasion, or artists you love and I'll blend Spotify insights with audio features for a smooth flow. I can whip up sunrise chillouts, HIIT boosters, nostalgic 90s sing-alongs, or globe-trotting discovery journeys. Just drop the vibe and I'll start mixing!";
+    "Hey there! I'm Mr. DJ 🎧, your AI playlist curator ready to spin custom mixes from mellow study sessions to sweaty workouts. Share the mood, occasion, or artists you love and I'll blend Spotify insights with audio features for a smooth flow. I can whip up sunrise chillouts, HIIT boosters, nostalgic 90s sing-alongs, or globe-trotting discovery journeys. Try prompts like:\n• “Build a 30-minute indie pop warm-up for my morning run.”\n• “Curate a lo-fi beats playlist for late-night studying.”\n• “Give me soulful brunch vibes with a sprinkle of neo-soul classics.”\nJust drop the vibe and I'll start mixing!";
 
   const presetOptions: PresetOption[] = [
     {
