@@ -30,7 +30,6 @@ langgraph-prebuilt==0.6.4
 langgraph-sdk==0.2.9
 langsmith==0.4.33
 multidict==6.7.0
-openai==2.2.0
 orjson==3.11.3
 ormsgpack==1.11.0
 packaging==25.0

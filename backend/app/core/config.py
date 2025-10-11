@@ -23,8 +23,15 @@ class Settings(BaseSettings):
     backend_url: str = os.getenv("BACKEND_URL", "http://localhost:8000")
 
     # AI Agent Configuration
-    openai_api_key: Optional[str] = os.getenv("OPENAI_API_KEY")
-    openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+    openrouter_api_key: Optional[str] = os.getenv("OPENROUTER_API_KEY")
+    openrouter_model: str = os.getenv(
+        "OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct"
+    )
+    openrouter_base_url: str = os.getenv(
+        "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
+    )
+    openrouter_referer: Optional[str] = os.getenv("OPENROUTER_SITE_URL")
+    openrouter_title: Optional[str] = os.getenv("OPENROUTER_SITE_NAME")
     tavily_api_key: Optional[str] = os.getenv("TAVILY_API_KEY")
 
     # LangSmith tracing configuration
@@ -56,8 +63,8 @@ class Settings(BaseSettings):
             raise ValueError("SPOTIFY_SERVICE_REFRESH_TOKEN is required")
         if not self.spotify_service_user_id:
             raise ValueError("SPOTIFY_SERVICE_USER_ID is required")
-        if not self.openai_api_key:
-            raise ValueError("OPENAI_API_KEY is required")
+        if not self.openrouter_api_key:
+            raise ValueError("OPENROUTER_API_KEY is required")
 
 
 # Global settings instance

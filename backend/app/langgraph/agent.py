@@ -149,8 +149,28 @@ async def call_model(state, config):
     else:
         messages = state["messages"]
 
-    logger.debug(f"🤖 Initializing ChatOpenAI model")
-    model = ChatOpenAI(model=settings.openai_model, reasoning_effort="low")
+    logger.debug("🤖 Initializing ChatOpenAI model for OpenRouter")
+    headers = {}
+    if settings.openrouter_referer:
+        headers["HTTP-Referer"] = settings.openrouter_referer
+    if settings.openrouter_title:
+        headers["X-Title"] = settings.openrouter_title
+
+    model_config = {
+        "api_key": settings.openrouter_api_key,
+        "base_url": settings.openrouter_base_url,
+        "model": settings.openrouter_model,
+        "default_headers": headers or None,
+    }
+
+    if (
+        settings.openrouter_model
+        and settings.openrouter_model.split("/", 1)[0].lower() == "openai"
+    ):
+        logger.debug("🤖 Applying low reasoning effort for OpenAI model via OpenRouter")
+        model_config["reasoning_effort"] = "low"
+
+    model = ChatOpenAI(**model_config)
     logger.debug(f"🤖 Binding tools to model")
     model_with_tools = model.bind_tools(get_tool_defs(config))
     logger.debug(f"🤖 Calling model with {len(messages)} messages")
