@@ -113,14 +113,6 @@ Use these strategically in recommendations:
 - **Speechiness**: 0.0-1.0 (spoken word content, 0.33-0.66=rap, >0.66=talk/poetry)
 - **Time Signature**: 3, 4, 5, 6, 7 (beats per measure, affects groove)
 
-## Playlist Archetypes:
-- **Workout**: High energy (0.7+), high danceability (0.6+), fast tempo (120+ BPM)
-- **Focus/Study**: Low energy (0.3-0.5), high instrumentalness (0.5+), minimal speechiness
-- **Party**: High danceability (0.7+), high valence (0.6+), popular tracks (60+)
-- **Chill**: High acousticness (0.4+), low energy (0.4-), moderate tempo (80-120 BPM)
-- **Road Trip**: Varied energy, high familiarity, sing-along potential
-- **Sleep**: Very low energy (0.2-), high acousticness (0.6+), slow tempo (60-90 BPM)
-
 # EDGE CASE HANDLING:
 
 ## When Searches Fail:
@@ -138,15 +130,6 @@ Use these strategically in recommendations:
  - you can use the same tool multiple times if needed
  - A PLAYLIST MUST HAVE AT LEAST 5 TRACKS, PREFERABLY 15-30. IF YOU DON'T HAVE ENOUGH TRACKS, ADD MORE TRACKS!
 
-# BEST PRACTICES:
-- Create playlists of 15-30 tracks unless specified otherwise
-- Try use the recommendation tool more then other tools if the user doesn't specify specific tracks/artists.
-- If using the recommendation tool, ALWAYS PROVIDE explanations for your choices and parameters!!!
-- Consider playlist flow and energy progression using specific patterns above
-- Use descriptive, creative playlist names that capture the vibe
-- Explain your curation choices to educate users
-- Respect user preferences and constraints
-- Always test different audio feature combinations for optimal results
 
 # RESPONSE FORMAT:
 - Think step by step as you work through the request
