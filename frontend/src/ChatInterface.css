@@ -679,6 +679,97 @@
   }
 }
 
+.ultrathink-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--color-bg-primary);
+  border-top: 1px solid var(--color-border-primary);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  flex-wrap: wrap;
+}
+
+.ultrathink-toggle-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-primary);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ultrathink-toggle-button:hover {
+  border-color: var(--color-accent-primary);
+  color: var(--color-text-primary);
+}
+
+.ultrathink-toggle-button.active {
+  background: var(--color-accent-primary);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(var(--color-accent-rgb, 18, 182, 201), 0.25);
+}
+
+.ultrathink-toggle-track {
+  position: relative;
+  width: 42px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--color-border-primary);
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.ultrathink-toggle-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-bg-primary);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.ultrathink-toggle-button.active .ultrathink-toggle-track {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.ultrathink-toggle-button.active .ultrathink-toggle-thumb {
+  transform: translateX(18px);
+  background: #ffffff;
+}
+
+.ultrathink-toggle-label {
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+}
+
+.ultrathink-toggle-caption {
+  flex: 1;
+  min-width: 180px;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .ultrathink-toggle {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .ultrathink-toggle-caption {
+    font-size: 0.8rem;
+  }
+}
+
 /* Input Area */
 .input-area {
   border-top: 1px solid var(--color-border-primary);

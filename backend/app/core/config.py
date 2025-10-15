@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     openrouter_model: str = os.getenv(
         "OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct"
     )
+    ultrathink_openrouter_model: Optional[str] = os.getenv(
+        "ULTRATHINK_OPENROUTER_MODEL"
+    )
     openrouter_base_url: str = os.getenv(
         "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
     )

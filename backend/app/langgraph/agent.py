@@ -156,16 +156,23 @@ async def call_model(state, config):
     if settings.openrouter_title:
         headers["X-Title"] = settings.openrouter_title
 
+    configurable = config.get("configurable", {})
+    model_name = configurable.get(
+        "openrouter_model_override", settings.openrouter_model
+    )
+
+    logger.debug(f"🤖 Using OpenRouter model: {model_name}")
+
     model_config = {
         "api_key": settings.openrouter_api_key,
         "base_url": settings.openrouter_base_url,
-        "model": settings.openrouter_model,
+        "model": model_name,
         "default_headers": headers or None,
     }
 
     if (
-        settings.openrouter_model
-        and settings.openrouter_model.split("/", 1)[0].lower() == "openai"
+        model_name
+        and model_name.split("/", 1)[0].lower() == "openai"
     ):
         logger.debug("🤖 Applying low reasoning effort for OpenAI model via OpenRouter")
         model_config["reasoning_effort"] = "low"

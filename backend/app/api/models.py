@@ -31,6 +31,7 @@ class PlaylistData(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     thread_id: Optional[str] = None
+    ultrathink: Optional[bool] = False
 
 
 class ChatResponse(BaseModel):

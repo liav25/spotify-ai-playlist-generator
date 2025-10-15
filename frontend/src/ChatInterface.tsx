@@ -29,6 +29,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
   const [windowWidth, setWindowWidth] = useState<number>(() => (
     typeof window !== 'undefined' ? window.innerWidth : 1024
   ));
+  const [ultrathinkEnabled, setUltrathinkEnabled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return localStorage.getItem('ultrathink_enabled') === 'true';
+  });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -56,6 +62,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
     // Start with empty messages - no welcome message
     setMessages([]);
   }, [username]);
+
+  useEffect(() => {
+    chatApi.setUltrathinkEnabled(ultrathinkEnabled);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ultrathink_enabled', ultrathinkEnabled ? 'true' : 'false');
+    }
+  }, [ultrathinkEnabled]);
 
   // Auto-resize textarea
   const adjustTextareaHeight = () => {
@@ -342,6 +355,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleUltrathinkToggle = () => {
+    setUltrathinkEnabled(prev => !prev);
   };
 
   const handlePresetClick = async (preset: PresetOption) => {
@@ -758,6 +775,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
           <div ref={messagesEndRef} />
         </div>
       )}
+
+      <div className="ultrathink-toggle">
+        <button
+          type="button"
+          className={`ultrathink-toggle-button ${ultrathinkEnabled ? 'active' : ''}`}
+          onClick={handleUltrathinkToggle}
+          aria-pressed={ultrathinkEnabled}
+        >
+          <span className="ultrathink-toggle-track" aria-hidden="true">
+            <span className="ultrathink-toggle-thumb" />
+          </span>
+          <span className="ultrathink-toggle-label">ULTRATHINK</span>
+        </button>
+        <span className="ultrathink-toggle-caption">
+          {ultrathinkEnabled ? 'Deeper reasoning enabled' : 'Faster responses'}
+        </span>
+      </div>
 
       {/* Input Area */}
       <div className="input-area">

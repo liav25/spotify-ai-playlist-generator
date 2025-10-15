@@ -15,6 +15,7 @@ from langchain_core.messages import HumanMessage
 from ..api.models import ChatRequest, ChatResponse, PlaylistData
 from ..services.spotify_service import spotify_service
 from ..langgraph.agent import assistant_ui_graph
+from ..core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,15 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
         thread_id = chat_request.thread_id or str(uuid.uuid4())
         logger.info(f"🧵 Using thread ID: {thread_id}")
 
+        ultrathink_enabled = bool(chat_request.ultrathink)
+        selected_model = settings.openrouter_model
+        if ultrathink_enabled and settings.ultrathink_openrouter_model:
+            selected_model = settings.ultrathink_openrouter_model
+        elif ultrathink_enabled:
+            logger.warning(
+                "⚠️ ULTRATHINK requested but ULTRATHINK_OPENROUTER_MODEL is not configured. Falling back to OPENROUTER_MODEL."
+            )
+
         # Prepare the state for the agent
         initial_state = {
             "messages": [HumanMessage(content=chat_request.message)],
@@ -49,6 +59,7 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
             "configurable": {
                 "thread_id": thread_id,
                 "spotify_client": spotify_client,
+                "openrouter_model_override": selected_model,
             },
             "recursion_limit": 100,
         }
@@ -146,6 +157,15 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
             thread_id = chat_request.thread_id or str(uuid.uuid4())
             logger.info(f"🧵 Using thread ID: {thread_id}")
 
+            ultrathink_enabled = bool(chat_request.ultrathink)
+            selected_model = settings.openrouter_model
+            if ultrathink_enabled and settings.ultrathink_openrouter_model:
+                selected_model = settings.ultrathink_openrouter_model
+            elif ultrathink_enabled:
+                logger.warning(
+                    "⚠️ ULTRATHINK requested but ULTRATHINK_OPENROUTER_MODEL is not configured. Falling back to OPENROUTER_MODEL."
+                )
+
             # Send initial status
             yield f"data: {json.dumps({'type': 'status', 'message': 'Starting...'})}\n\n"
 
@@ -162,6 +182,7 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
                 "configurable": {
                     "thread_id": thread_id,
                     "spotify_client": spotify_client,
+                    "openrouter_model_override": selected_model,
                 },
                 "recursion_limit": 100,
             }

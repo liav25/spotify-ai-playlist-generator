@@ -22,6 +22,7 @@ export interface ChatMessage {
 export interface ChatRequest {
   message: string;
   thread_id?: string;
+  ultrathink?: boolean;
 }
 
 export interface ChatResponse {
@@ -80,9 +81,18 @@ export class ChatApi {
   private _username: string | null = null;
   private threadId: string | null = null;
   private apiBaseUrl: string = getApiBaseUrl();
+  private ultrathinkEnabled = false;
 
   setUsername(username: string) {
     this._username = username;
+  }
+
+  setUltrathinkEnabled(enabled: boolean) {
+    this.ultrathinkEnabled = enabled;
+  }
+
+  getUltrathinkEnabled(): boolean {
+    return this.ultrathinkEnabled;
   }
 
   private getAuthToken(): string | null {
@@ -96,6 +106,10 @@ export class ChatApi {
       message: content,
       thread_id: this.threadId || undefined
     };
+
+    if (this.ultrathinkEnabled) {
+      request.ultrathink = true;
+    }
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
@@ -199,6 +213,10 @@ export class ChatApi {
       message: content,
       thread_id: this.threadId || undefined
     };
+
+    if (this.ultrathinkEnabled) {
+      request.ultrathink = true;
+    }
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
