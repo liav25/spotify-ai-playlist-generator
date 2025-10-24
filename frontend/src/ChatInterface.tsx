@@ -480,7 +480,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
 
 
   const WHAT_CAN_YOU_DO_RESPONSE =
-    "Hey there! I'm Mr. DJ 🎧, your AI playlist curator ready to spin custom mixes from mellow study sessions to sweaty workouts. Share the mood, occasion, or artists you love and I'll blend Spotify insights with audio features for a smooth flow. I can whip up sunrise chillouts, HIIT boosters, nostalgic 90s sing-alongs, or globe-trotting discovery journeys. Try prompts like:\n• “Build a 30-minute indie pop warm-up for my morning run.”\n• “Curate a lo-fi beats playlist for late-night studying.”\n• “Give me soulful brunch vibes with a sprinkle of neo-soul classics.”\nJust drop the vibe and I'll start mixing!";
+    "Hey, I'm Mr DJ! 🎧 I can create Spotify playlists for you, based on:\n\n• **Mood & Vibe:** tell me what mood you're chasing—chill, happy, moody, you name it\n\n• **Special Activities:** from focus-friendly study sessions to dancing with friends, running, or epic road trips—I'll find the perfect soundtrack\n\n• **Artist & Genre Crushes:** favorites you love or sounds you want to discover\n\n• **Specific Requests:** Billboard Top 20 from 1993? Top Eurovision winners? I can do all that and more!\n\nFor difficult tasks, the **Ultrathink** mode is recommended (it may take longer to craft your playlist).\n\nTell me what you're feeling and I'll spin it into a soundtrack!";
 
   const presetOptions: PresetOption[] = [
     {

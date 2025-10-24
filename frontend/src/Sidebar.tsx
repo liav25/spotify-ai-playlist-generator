@@ -2,6 +2,7 @@ import React from 'react';
 import { useTheme } from './ThemeContext';
 import { usePlaylist } from './PlaylistContext';
 import PlaylistTrack from './PlaylistTrack';
+import AboutButton from './AboutButton';
 import './Sidebar.css';
 // Resolve logo URL via Vite so bundler handles it correctly
 const appLogoUrl = new URL('../mrdjlogo.svg', import.meta.url).href
@@ -128,6 +129,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
               </svg>
             )}
           </button>
+          <AboutButton className="sidebar-about-btn" />
         </div>
       </div>
 

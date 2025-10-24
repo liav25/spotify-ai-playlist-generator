@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import ChatInterface from './ChatInterface'
 import Sidebar from './Sidebar'
+import AboutButton from './AboutButton'
 import { ThemeProvider } from './ThemeContext'
 import { PlaylistProvider } from './PlaylistContext'
 // Resolve logo URL via Vite so bundler handles it correctly
@@ -63,16 +64,19 @@ function AppContent({ user }: { user: User }) {
     <div className="app">
       {/* Mobile Header */}
       <div className="mobile-header">
-        <button
-          className={`mobile-menu-btn ${!hasOpenedSidebar ? 'pulse-animation' : ''}`}
-          onClick={toggleMobileSidebar}
-          aria-label="Show me playlists"
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor" className="playlist-icon">
-            <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>
-          </svg>
-          <span className="mobile-menu-text">Show me!</span>
-        </button>
+        <div className="mobile-header-left">
+          <button
+            className={`mobile-menu-btn ${!hasOpenedSidebar ? 'pulse-animation' : ''}`}
+            onClick={toggleMobileSidebar}
+            aria-label="Show me playlists"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="playlist-icon">
+              <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>
+            </svg>
+            <span className="mobile-menu-text">Show me!</span>
+          </button>
+          <AboutButton variant="mobile" className="mobile-about-btn" />
+        </div>
         
         <div className="mobile-header-center">
           <div className="mobile-logo">
