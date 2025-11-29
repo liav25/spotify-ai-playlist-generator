@@ -14,12 +14,13 @@ from langchain_core.messages import HumanMessage
 
 from ..api.models import ChatRequest, ChatResponse, PlaylistData
 from ..services.spotify_service import spotify_service
-from ..langgraph.agent import assistant_ui_graph
+from ..langgraph_agent.agent import assistant_ui_graph
 from ..core.config import settings
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_request: ChatRequest, request: Request):

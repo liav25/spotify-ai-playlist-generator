@@ -43,7 +43,7 @@ async def get_playlist(playlist_id: str, config):
         # Use service account client
 
         # Use the get_playlist_tracks tool
-        from ..langgraph.tools import get_playlist_tracks
+        from ..langgraph_agent.tools import get_playlist_tracks
 
         config = {"configurable": {"spotify_client": spotify_service}}
 

@@ -13,7 +13,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import settings
 from .routers import api, chat
-from .services.spotify_service import spotify_service
 
 # Configure logging
 logging.basicConfig(
