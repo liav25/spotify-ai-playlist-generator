@@ -6,7 +6,7 @@ import os
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
-from langchain_core.messages import SystemMessage, ToolMessage
+from langchain_core.messages import SystemMessage, ToolMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.errors import NodeInterrupt
 from langchain_core.tools import BaseTool
@@ -199,36 +199,55 @@ async def call_model(state, config):
 
     model = ChatOpenAI(**model_config)
 
-    # Apply langmem summarization when messages exceed 10k tokens
+    # Only run summarization at the start of a new user turn, not between tool calls
+    # Check if the last message (before this turn) is from a tool - if so, skip summarization
+    original_messages = state.get("messages", [])
+    last_non_system_msg = next(
+        (m for m in reversed(original_messages) if not isinstance(m, SystemMessage)),
+        None,
+    )
+    is_new_user_turn = isinstance(last_non_system_msg, HumanMessage)
+
     running_summary = (
         state.get("context", {}).get("running_summary")
         if state.get("context")
         else None
     )
 
-    # Create summarization model using standard openrouter_model (not ultrathink)
-    summarization_model_config = {
-        "api_key": settings.openrouter_api_key,
-        "base_url": settings.openrouter_base_url,
-        "model": settings.openrouter_model,  # Always use standard model for summarization
-        "default_headers": headers or None,
-    }
-    summarization_model = ChatOpenAI(**summarization_model_config)
+    if is_new_user_turn:
+        # Apply langmem summarization only at the start of new user turns
+        logger.debug("📝 New user turn detected, running summarization check")
 
-    summarization_result = summarize_messages(
-        messages,
-        running_summary=running_summary,
-        model=summarization_model,
-        max_tokens=SUMMARIZATION_MAX_TOKENS,
-        max_tokens_before_summary=SUMMARIZATION_TRIGGER_TOKENS,
-        max_summary_tokens=SUMMARIZATION_MAX_SUMMARY_TOKENS,
-    )
+        # Create summarization model using standard openrouter_model (not ultrathink)
+        summarization_model_config = {
+            "api_key": settings.openrouter_api_key,
+            "base_url": settings.openrouter_base_url,
+            "model": settings.openrouter_model,  # Always use standard model for summarization
+            "default_headers": headers or None,
+        }
+        summarization_model = ChatOpenAI(**summarization_model_config)
 
-    # Use summarized messages for LLM call
-    messages_for_llm = summarization_result.messages
-    logger.debug(
-        f"📝 After summarization: {len(messages)} -> {len(messages_for_llm)} messages"
-    )
+        summarization_result = summarize_messages(
+            messages,
+            running_summary=running_summary,
+            model=summarization_model,
+            max_tokens=SUMMARIZATION_MAX_TOKENS,
+            max_tokens_before_summary=SUMMARIZATION_TRIGGER_TOKENS,
+            max_summary_tokens=SUMMARIZATION_MAX_SUMMARY_TOKENS,
+        )
+
+        messages_for_llm = summarization_result.messages
+        logger.debug(
+            f"📝 After summarization: {len(messages)} -> {len(messages_for_llm)} messages"
+        )
+    else:
+        # Mid-flow (after tools), skip summarization to preserve tool context
+        logger.debug("📝 Mid-flow detected (after tools), skipping summarization")
+        messages_for_llm = messages
+        # Create a minimal result object to avoid breaking the running_summary update logic
+        summarization_result = type(
+            "SummarizationResult", (), {"running_summary": running_summary}
+        )()
 
     logger.debug(f"🤖 Binding tools to model")
     model_with_tools = model.bind_tools(get_tool_defs(config))

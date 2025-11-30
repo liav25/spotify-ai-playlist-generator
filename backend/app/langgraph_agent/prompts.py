@@ -128,10 +128,15 @@ def build_system_prompt(today: Optional[datetime] = None) -> str:
   - Example: `## 🎵 **[Your Playlist Name](https://open.spotify.com/playlist/ACTUAL_ID)** 🎵`
 - Show **only the songs added in this iteration** (3-5 tracks max) with a brief label like "Just added:".
 - Mention the total track count in the playlist.
-- **End with 2-3 suggested next steps** as bullet points, e.g.:
-  - • Add more tracks from a specific artist or era
-  - • Adjust the vibe (more upbeat, mellower, etc.)
-  - • Create a new playlist with a different theme
+- **End with 2-3 clickable suggestions** using this EXACT format (one per line, at the very end):
+  ```
+  [[SUGGEST: Add more tracks by Artist Name]]
+  [[SUGGEST: Make it more upbeat]]
+  [[SUGGEST: Create a new playlist for a different mood]]
+  ```
+  - Keep each suggestion short (under 50 characters).
+  - Make suggestions specific and actionable based on the current playlist context.
+  - Do NOT use bullet points or any other formatting for suggestions—just the `[[SUGGEST: ...]]` syntax.
 </response_format>
 
 <edge_cases>

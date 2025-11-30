@@ -478,6 +478,36 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
     return label;
   };
 
+  // Extract [[SUGGEST: ...]] patterns from message content
+  const extractSuggestions = (content: string): string[] => {
+    const suggestionRegex = /\[\[SUGGEST:\s*(.+?)\]\]/g;
+    const suggestions: string[] = [];
+    let match;
+    while ((match = suggestionRegex.exec(content)) !== null) {
+      suggestions.push(match[1].trim());
+    }
+    return suggestions;
+  };
+
+  // Strip [[SUGGEST: ...]] patterns from message content for display
+  const stripSuggestions = (content: string): string => {
+    return content.replace(/\[\[SUGGEST:\s*.+?\]\]\n?/g, '').trim();
+  };
+
+  // Handle suggestion chip click
+  const handleSuggestionClick = async (suggestion: string) => {
+    if (isLoading) return;
+
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: suggestion,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    await sendStreamingMessage(suggestion);
+  };
 
   const WHAT_CAN_YOU_DO_RESPONSE =
     "Hey, I'm Mr DJ! 🎧 I can create Spotify playlists for you, based on:\n\n• **Mood & Vibe:** tell me what mood you're chasing—chill, happy, moody, you name it\n\n• **Special Activities:** from focus-friendly study sessions to dancing with friends, running, or epic road trips—I'll find the perfect soundtrack\n\n• **Artist & Genre Crushes:** favorites you love or sounds you want to discover\n\n• **Specific Requests:** Billboard Top 20 from 1993? Top Eurovision winners? I can do all that and more!\n\nFor difficult tasks, the **Ultrathink** mode is recommended (it may take longer to craft your playlist).\n\nTell me what you're feeling and I'll spin it into a soundtrack!";
@@ -652,93 +682,115 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ username }) => {
                         )}
                       </div>
                     ) : message.role === 'assistant' ? (
-                      <ReactMarkdown
-                        components={{
-                          a: ({ href, children }) => (
-                            <a 
-                              href={href} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="message-link"
+                      (() => {
+                        const suggestions = extractSuggestions(message.content);
+                        const displayContent = stripSuggestions(message.content);
+                        return (
+                          <>
+                            <ReactMarkdown
+                              components={{
+                                a: ({ href, children }) => (
+                                  <a 
+                                    href={href} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="message-link"
+                                >
+                                  {children}
+                                </a>
+                              ),
+                              img: () => null, // Hide images to keep track lists clean
+                              li: ({ children }) => {
+                                const textContent = extractTextContent(children);
+                                const formattedText = formatListItemText(textContent);
+                                const shouldAppendLogo = containsTavilyReference(textContent);
+                                return (
+                                  <li 
+                                    dir={getTextDirection(textContent)}
+                                    style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
+                                  >
+                                    {formattedText}
+                                    {shouldAppendLogo && (
+                                      <>
+                                        {' '}
+                                        {renderInlineTavilyLogo()}
+                                      </>
+                                    )}
+                                  </li>
+                                );
+                              },
+                              p: ({ children }) => {
+                                const textContent = extractTextContent(children);
+                                const shouldAppendLogo = containsTavilyReference(textContent);
+                                return (
+                                  <p 
+                                    dir={getTextDirection(textContent)}
+                                    style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
+                                  >
+                                    {children}
+                                    {shouldAppendLogo && (
+                                      <>
+                                        {' '}
+                                        {renderInlineTavilyLogo()}
+                                      </>
+                                    )}
+                                  </p>
+                                );
+                              },
+                              h1: ({ children }) => {
+                                const textContent = extractTextContent(children);
+                                return (
+                                  <h1 
+                                    dir={getTextDirection(textContent)}
+                                    style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
+                                  >
+                                    {children}
+                                  </h1>
+                                );
+                              },
+                              h2: ({ children }) => {
+                                const textContent = extractTextContent(children);
+                                return (
+                                  <h2 
+                                    dir={getTextDirection(textContent)}
+                                    style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
+                                  >
+                                    {children}
+                                  </h2>
+                                );
+                              },
+                              h3: ({ children }) => {
+                                const textContent = extractTextContent(children);
+                                return (
+                                  <h3 
+                                    dir={getTextDirection(textContent)}
+                                    style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
+                                  >
+                                    {children}
+                                  </h3>
+                                );
+                              }
+                            }}
                           >
-                            {children}
-                          </a>
-                        ),
-                        img: () => null, // Hide images to keep track lists clean
-                        li: ({ children }) => {
-                          const textContent = extractTextContent(children);
-                          const formattedText = formatListItemText(textContent);
-                          const shouldAppendLogo = containsTavilyReference(textContent);
-                          return (
-                            <li 
-                              dir={getTextDirection(textContent)}
-                              style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
-                            >
-                              {formattedText}
-                              {shouldAppendLogo && (
-                                <>
-                                  {' '}
-                                  {renderInlineTavilyLogo()}
-                                </>
-                              )}
-                            </li>
-                          );
-                        },
-                        p: ({ children }) => {
-                          const textContent = extractTextContent(children);
-                          const shouldAppendLogo = containsTavilyReference(textContent);
-                          return (
-                            <p 
-                              dir={getTextDirection(textContent)}
-                              style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
-                            >
-                              {children}
-                              {shouldAppendLogo && (
-                                <>
-                                  {' '}
-                                  {renderInlineTavilyLogo()}
-                                </>
-                              )}
-                            </p>
-                          );
-                        },
-                        h1: ({ children }) => {
-                          const textContent = extractTextContent(children);
-                          return (
-                            <h1 
-                              dir={getTextDirection(textContent)}
-                              style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
-                            >
-                              {children}
-                            </h1>
-                          );
-                        },
-                        h2: ({ children }) => {
-                          const textContent = extractTextContent(children);
-                          return (
-                            <h2 
-                              dir={getTextDirection(textContent)}
-                              style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
-                            >
-                              {children}
-                            </h2>
-                          );
-                        },
-                        h3: ({ children }) => {
-                          const textContent = extractTextContent(children);
-                          return (
-                            <h3 
-                              dir={getTextDirection(textContent)}
-                              style={{ textAlign: getTextDirection(textContent) === 'rtl' ? 'right' : 'left' }}
-                            >
-                              {children}
-                            </h3>
-                          );
-                        }
-                      }}
-                    >
-                      {message.content}
-                    </ReactMarkdown>
+                            {displayContent}
+                          </ReactMarkdown>
+                          {suggestions.length > 0 && (
+                            <div className="suggestion-chips">
+                              {suggestions.map((suggestion, idx) => (
+                                <button
+                                  key={idx}
+                                  className="suggestion-chip"
+                                  onClick={() => handleSuggestionClick(suggestion)}
+                                  disabled={isLoading}
+                                >
+                                  {suggestion}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()
                   ) : (
                     message.content.split('\n').map((line, index) => (
                       <div 
