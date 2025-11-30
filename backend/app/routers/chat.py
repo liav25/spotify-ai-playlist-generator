@@ -46,13 +46,13 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
                 "⚠️ ULTRATHINK requested but ULTRATHINK_OPENROUTER_MODEL is not configured. Falling back to OPENROUTER_MODEL."
             )
 
-        # Prepare the state for the agent
-        initial_state = {
-            "messages": [HumanMessage(content=chat_request.message)],
-            "playlist_id": None,
-            "playlist_name": None,
-            "user_intent": chat_request.message,
-        }
+            # Prepare the state for the agent
+            # Note: Do NOT set playlist_id/playlist_name to None here - let the checkpointer
+            # preserve these values across conversation turns for playlist continuity
+            initial_state = {
+                "messages": [HumanMessage(content=chat_request.message)],
+                "user_intent": chat_request.message,
+            }
         logger.debug(f"📋 Initial state prepared: {initial_state}")
 
         # Configuration for the agent
@@ -171,10 +171,10 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
             yield f"data: {json.dumps({'type': 'status', 'message': 'Starting...'})}\n\n"
 
             # Prepare the state for the agent
+            # Note: Do NOT set playlist_id/playlist_name to None here - let the checkpointer
+            # preserve these values across conversation turns for playlist continuity
             initial_state = {
                 "messages": [HumanMessage(content=chat_request.message)],
-                "playlist_id": None,
-                "playlist_name": None,
                 "user_intent": chat_request.message,
             }
 
@@ -192,7 +192,8 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
             logger.info(f"🤖 Calling LangGraph agent in streaming mode")
 
             # Stream through agent execution and build up the final state
-            final_state = {}
+            # Use a smarter merge that preserves important data like playlist_data
+            final_state = {"messages": []}
             async for event in assistant_ui_graph.astream(initial_state, config):
                 # Check if client disconnected
                 if await request.is_disconnected():
@@ -202,8 +203,22 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
                 # Process agent events and accumulate state
                 if "agent" in event:
                     agent_output = event["agent"]
-                    # Merge agent output into final state
-                    final_state.update(agent_output)
+                    # Smart merge: append messages, preserve playlist data
+                    if "messages" in agent_output:
+                        final_state["messages"].extend(agent_output["messages"])
+                    # Preserve playlist_data once it's set (don't overwrite with None)
+                    for key in ["playlist_data", "playlist_id", "playlist_name"]:
+                        if agent_output.get(key) is not None:
+                            final_state[key] = agent_output[key]
+                    # Copy other non-critical fields
+                    for key in agent_output:
+                        if key not in [
+                            "messages",
+                            "playlist_data",
+                            "playlist_id",
+                            "playlist_name",
+                        ]:
+                            final_state[key] = agent_output[key]
 
                     messages = agent_output.get("messages", [])
                     if messages:
@@ -223,6 +238,7 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
                                     "get_track_recommendations": "✨ Getting personalized recommendations...",
                                     "get_available_genres": "🎼 Fetching available genres...",
                                     "create_playlist": "📝 Creating your playlist...",
+                                    "create_and_populate_playlist": "🎵 Creating and populating your playlist...",
                                     "add_tracks_to_playlist": "➕ Adding tracks to playlist...",
                                     "get_playlist_tracks": "📋 Getting playlist tracks...",
                                     "tavily_search": "🌐 Researching music context (Powered by Tavily)...",
@@ -239,20 +255,48 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
                                 await asyncio.sleep(0)  # Yield control
 
                 elif "tools" in event:
-                    # Tool execution completed - merge tools output into final state
+                    # Tool execution completed - smart merge tools output
                     tools_output = event["tools"]
-                    final_state.update(tools_output)
+                    if "messages" in tools_output:
+                        final_state["messages"].extend(tools_output["messages"])
+                    # Preserve playlist_data once it's set (don't overwrite with None)
+                    for key in ["playlist_data", "playlist_id", "playlist_name"]:
+                        if tools_output.get(key) is not None:
+                            final_state[key] = tools_output[key]
+                            logger.info(
+                                f"🎵 Captured {key} from tools: {tools_output[key] if key != 'playlist_data' else tools_output[key].get('name', 'Unknown')}"
+                            )
+                    # Copy other fields
+                    for key in tools_output:
+                        if key not in [
+                            "messages",
+                            "playlist_data",
+                            "playlist_id",
+                            "playlist_name",
+                        ]:
+                            final_state[key] = tools_output[key]
 
                     yield f"data: {json.dumps({'type': 'tool_end'})}\n\n"
                     await asyncio.sleep(0)
 
             # Use the accumulated final state
-            result = final_state if final_state else None
+            result = (
+                final_state if final_state and final_state.get("messages") else None
+            )
+
+            # Log what we captured
+            if result:
+                logger.info(
+                    f"📊 Streaming completed - messages: {len(result.get('messages', []))}, playlist_data: {'yes' if result.get('playlist_data') else 'no'}"
+                )
 
             # If we didn't get a result from streaming, fall back to invoke
             if result is None or not result.get("messages"):
                 logger.warning("⚠️ No result from streaming, falling back to ainvoke")
                 result = await assistant_ui_graph.ainvoke(initial_state, config)
+                logger.info(
+                    f"📊 Fallback invoke - playlist_data: {'yes' if result.get('playlist_data') else 'no'}"
+                )
 
             # Extract the final message
             response_content = (

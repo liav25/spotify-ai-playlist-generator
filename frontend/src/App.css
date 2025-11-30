@@ -51,40 +51,85 @@
   width: auto;
   min-width: 44px;
   height: 44px;
-  background: none;
+  background: linear-gradient(135deg, #0F7A35 0%, #138A3D 100%);
   border: none;
-  color: var(--color-text-primary);
+  color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 0 12px;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(15, 122, 53, 0.5);
+  position: relative;
 }
 
 .mobile-menu-btn:hover {
-  background: var(--color-bg-tertiary);
+  background: linear-gradient(135deg, #138A3D 0%, #16a049 100%);
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(15, 122, 53, 0.6);
 }
 
-/* Pulse Animation - Only on mobile and only before first interaction */
+.mobile-menu-btn:active {
+  transform: scale(0.98);
+}
+
+/* Notification badge to draw attention */
+.mobile-menu-btn::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  background: #ff6b6b;
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: badge-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+/* Wiggle + Glow Animation - Only on mobile and only before first interaction */
 .mobile-menu-btn.pulse-animation {
-  position: relative;
-  animation: pulse-animation 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: wiggle-glow 2.5s ease-in-out infinite;
+}
+
+/* Hide badge after user has interacted */
+.mobile-menu-btn:not(.pulse-animation)::after {
+  display: none;
 }
 
 /* Accessibility: Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   .mobile-menu-btn.pulse-animation {
     animation: none;
-    box-shadow: 0 0 0 2px var(--color-accent-primary);
+    box-shadow: 0 0 0 3px rgba(15, 122, 53, 0.8);
+  }
+  
+  .mobile-menu-btn.pulse-animation::after {
+    animation: none;
   }
 }
 
 .playlist-icon {
   width: 20px;
   height: 20px;
+}
+
+.mobile-menu-btn .playlist-icon {
+  color: white;
 }
 
 .mobile-menu-text {
@@ -107,6 +152,13 @@
     padding: 0;
   }
 
+  .mobile-menu-btn::after {
+    top: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+  }
+
   .playlist-icon {
     width: 18px;
     height: 18px;
@@ -125,6 +177,13 @@
     padding: 0;
   }
 
+  .mobile-menu-btn::after {
+    top: 3px;
+    right: 3px;
+    width: 9px;
+    height: 9px;
+  }
+
   .playlist-icon {
     width: 20px;
     height: 20px;
@@ -136,10 +195,16 @@
   .mobile-menu-text {
     display: inline;
     font-size: 14px;
+    font-weight: 600;
   }
   
   .mobile-menu-btn {
-    padding: 0 12px;
+    padding: 0 14px;
+  }
+
+  .mobile-menu-btn::after {
+    top: 4px;
+    right: 4px;
   }
 }
 
@@ -234,13 +299,27 @@
   }
 }
 
-/* Box-shadow Pulse Animation for Mobile Menu Button */
-@keyframes pulse-animation {
-  0% {
-    box-shadow: 0 0 0 0px rgba(29, 185, 84, 0.4);
+/* Wiggle + Glow Animation for Mobile Menu Button */
+@keyframes wiggle-glow {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+    box-shadow: 0 2px 8px rgba(15, 122, 53, 0.5);
   }
-  100% {
-    box-shadow: 0 0 0 20px rgba(29, 185, 84, 0);
+  10% {
+    transform: rotate(-4deg) scale(1.02);
+  }
+  20% {
+    transform: rotate(4deg) scale(1.02);
+  }
+  30% {
+    transform: rotate(-2deg) scale(1.01);
+  }
+  40% {
+    transform: rotate(2deg) scale(1.01);
+  }
+  50% {
+    transform: rotate(0deg) scale(1);
+    box-shadow: 0 4px 20px rgba(15, 122, 53, 0.7);
   }
 }
 

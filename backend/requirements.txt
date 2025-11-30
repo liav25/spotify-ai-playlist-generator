@@ -28,6 +28,7 @@ langgraph==0.6.8
 langgraph-checkpoint==2.1.2
 langgraph-prebuilt==0.6.4
 langgraph-sdk==0.2.9
+langmem>=0.0.14
 langsmith==0.4.33
 multidict==6.7.0
 orjson==3.11.3
